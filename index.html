@@ -90,16 +90,21 @@
 
             <div class="sidebar-footer">
                 <div class="user-pill flex items-center justify-between">
-                    <div class="flex items-center gap-2 overflow-hidden">
+                    <div class="flex items-center gap-2 overflow-hidden cursor-pointer" id="btn-edit-current-profile" title="Edit Profil & Sampel Wajah">
                         <img src="assets/headshot_male.png" alt="User Avatar" class="user-avatar" id="sidebar-user-avatar">
                         <div class="user-info">
                             <span class="user-name" id="sidebar-user-name">Alex Vance</span>
                             <span class="user-role" id="sidebar-user-role">Administrator Sistem</span>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-outline text-rose-400 border-rose-500/30" id="btn-logout" title="Logout">
-                        <i data-lucide="log-out"></i>
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button class="btn btn-sm btn-outline text-cyan border-cyan/30" id="btn-open-edit-profile" title="Edit Profil & Wajah">
+                            <i data-lucide="settings"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline text-rose-400 border-rose-500/30" id="btn-logout" title="Logout">
+                            <i data-lucide="log-out"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -608,6 +613,68 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal Edit Profil & Update Sampel Wajah -->
+    <div class="modal-overlay hidden" id="modal-edit-profile">
+        <div class="modal-content glassmorphism" style="width:600px; max-width:95vw;">
+            <div class="modal-header">
+                <h3><i data-lucide="user-check" class="text-cyan"></i> Edit Profil & Update Sampel Wajah</h3>
+                <button class="modal-close" id="btn-close-edit-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-edit-profile">
+                <div class="modal-body space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text" id="edit-nama" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>NIK Karyawan</label>
+                            <input type="text" id="edit-nik" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label>Email Perusahaan</label>
+                            <input type="email" id="edit-email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Divisi</label>
+                            <select id="edit-divisi" class="form-select">
+                                <option value="Engineering">Engineering</option>
+                                <option value="Design">Design</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="DevOps">DevOps</option>
+                                <option value="Sales">Sales</option>
+                                <option value="HRD">HRD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Live Update Camera Preview (Portrait Ratio) -->
+                    <div class="form-group margin-top">
+                        <label class="text-cyan font-bold">Pembaruan Vektor Sampel Wajah (Kamera Portrait)</label>
+                        <div class="mini-cam-preview" style="height:220px; aspect-ratio:3/4;">
+                            <video id="edit-webcam-video" autoplay playsinline muted class="video-element"></video>
+                            <div class="scan-hud">
+                                <div class="hud-box top-left">RE-SCAN WAJAH</div>
+                                <div class="hud-box top-right" id="edit-hud-status">POSISIKAN WAJAH</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-block btn-sm margin-top" id="btn-edit-start-cam">
+                            <i data-lucide="camera"></i> Ambil Ulang Foto & Sampel Wajah
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-edit-cancel">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btn-edit-submit">
+                        <i data-lucide="save"></i> Simpan Perubahan Profil
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Modal Registrasi Wajah Karyawan Baru -->

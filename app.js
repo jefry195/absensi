@@ -1,7 +1,7 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
 // Integrated with Real Device Camera in PORTRAIT ORIENTATION (3:4 Ratio)
-// & Google Sheets Database Verification & New Face Registration
+// & Google Sheets Database Verification, Face Registration & Face Edit Profile
 // Bahasa Indonesia Version
 // ==========================================================================
 
@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pre-registered Default Users for Instant Testing
     const DEFAULT_USERS = [
-        { email: 'admin@lumina.ai', password: 'admin123', name: 'Alex Vance', role: 'admin', dept: 'System Admin', avatar: 'assets/headshot_male.png' },
-        { email: 'karyawan@company.com', password: 'karyawan123', name: 'Sophia Chen', role: 'karyawan', dept: 'UX Design', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-        { email: 'marcus@company.com', password: 'password123', name: 'Marcus Brody', role: 'karyawan', dept: 'Logistics', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' }
+        { email: 'admin@lumina.ai', password: 'admin123', name: 'Alex Vance', role: 'admin', dept: 'System Admin', avatar: 'assets/headshot_male.png', nik: '3171008026' },
+        { email: 'karyawan@company.com', password: 'karyawan123', name: 'Sophia Chen', role: 'karyawan', dept: 'UX Design', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', nik: '3171004102' },
+        { email: 'marcus@company.com', password: 'password123', name: 'Marcus Brody', role: 'karyawan', dept: 'Logistics', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', nik: '3171005597' }
     ];
 
     // Application State
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isCameraActive: false,
         cameraStream: null,
         regCameraStream: null,
+        editCameraStream: null,
         geofence: { lat: -6.2088, lng: 106.8456, radius: 100 },
         registeredEmployees: [], // Loaded live from Google Sheets Users tab (gid=0)
         employees: [
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reticleStatus = document.getElementById('reticle-status');
     const cameraStatusText = document.getElementById('camera-status-text');
 
-    // Modal Registration Elements
+    // Registration Modal Elements
     const modalRegisterFace = document.getElementById('modal-register-face');
     const btnOpenRegisterModal = document.getElementById('btn-open-register-modal');
     const btnRosterAddUser = document.getElementById('btn-roster-add-user');
@@ -96,6 +97,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRegStartCam = document.getElementById('btn-reg-start-cam');
     const regWebcamVideo = document.getElementById('reg-webcam-video');
     const formRegisterFace = document.getElementById('form-register-face');
+
+    // Edit Profile Modal Elements
+    const modalEditProfile = document.getElementById('modal-edit-profile');
+    const btnOpenEditProfile = document.getElementById('btn-open-edit-profile');
+    const btnEditCurrentProfile = document.getElementById('btn-edit-current-profile');
+    const btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+    const btnEditCancel = document.getElementById('btn-edit-cancel');
+    const btnEditStartCam = document.getElementById('btn-edit-start-cam');
+    const editWebcamVideo = document.getElementById('edit-webcam-video');
+    const formEditProfile = document.getElementById('form-edit-profile');
 
     const titlesMap = {
         'login': { title: 'Login Sistem', sub: 'Pilih role & autentikasi masuk' },
@@ -123,18 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileSidebarClose?.addEventListener('click', closeMobileSidebar);
     sidebarBackdrop?.addEventListener('click', closeMobileSidebar);
 
-    // REAL CAMERA ACCESS (PORTRAIT MODE 3:4 / 9:16 FOR SMARTPHONE)
+    // REAL CAMERA ACCESS (PORTRAIT MODE 3:4)
     async function startWebcamStream() {
         try {
             if (reticleStatus) reticleStatus.textContent = 'MEMBUKA KAMERA PORTRAIT PERANGKAT...';
-            if (cameraStatusText) cameraStatusText.textContent = 'Meminta Izin Kamera Portrait Device...';
+            if (cameraStatusText) cameraStatusText.textContent = 'Meminta Izin Kamera Device...';
 
             const constraints = {
                 video: {
                     width: { ideal: 720 },
                     height: { ideal: 1280 },
-                    facingMode: 'user', // Front Camera
-                    aspectRatio: { ideal: 0.75 } // 3:4 Portrait Ratio
+                    facingMode: 'user',
+                    aspectRatio: { ideal: 0.75 }
                 },
                 audio: false
             };
@@ -149,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await webcamVideo.play();
             }
 
-            if (reticleStatus) reticleStatus.textContent = 'KAMERA PORTRAIT AKTIF - POSISIKAN WAJAH DI SINI';
+            if (reticleStatus) reticleStatus.textContent = 'KAMERA PORTRAIT AKTIF - POSISIKAN WAJAH DI DALAM BINGKAI';
             if (cameraStatusText) cameraStatusText.textContent = 'Kamera Portrait Live Tracking';
         } catch (err) {
             console.error("Gagal membuka kamera:", err);
@@ -177,6 +188,129 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             startWebcamStream();
         }
+    });
+
+    // EDIT PROFILE & FACE RESAMPLE CAMERA
+    async function startEditCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 480 }, height: { ideal: 640 }, facingMode: 'user', aspectRatio: { ideal: 0.75 } },
+                audio: false
+            });
+            state.editCameraStream = stream;
+            if (editWebcamVideo) {
+                editWebcamVideo.srcObject = stream;
+                await editWebcamVideo.play();
+            }
+            const hud = document.getElementById('edit-hud-status');
+            if (hud) hud.textContent = 'SIAP RE-SCAN WAJAH';
+        } catch (e) {
+            console.warn("Gagal membuka kamera edit profil:", e);
+        }
+    }
+
+    function stopEditCamera() {
+        if (state.editCameraStream) {
+            state.editCameraStream.getTracks().forEach(t => t.stop());
+            state.editCameraStream = null;
+        }
+        if (editWebcamVideo) editWebcamVideo.srcObject = null;
+    }
+
+    btnEditStartCam?.addEventListener('click', startEditCamera);
+
+    function openEditProfileModal() {
+        const user = state.currentUser || { name: 'Alex Vance', nik: '3171008026', email: 'admin@lumina.ai', dept: 'Engineering' };
+        
+        document.getElementById('edit-nama').value = user.name || '';
+        document.getElementById('edit-nik').value = user.nik || '3171008026';
+        document.getElementById('edit-email').value = user.email || '';
+        document.getElementById('edit-divisi').value = user.dept || 'Engineering';
+
+        if (modalEditProfile) modalEditProfile.classList.remove('hidden');
+        startEditCamera();
+    }
+
+    function closeEditProfileModal() {
+        if (modalEditProfile) modalEditProfile.classList.add('hidden');
+        stopEditCamera();
+    }
+
+    btnOpenEditProfile?.addEventListener('click', openEditProfileModal);
+    btnEditCurrentProfile?.addEventListener('click', openEditProfileModal);
+    btnCloseEditModal?.addEventListener('click', closeEditProfileModal);
+    btnEditCancel?.addEventListener('click', closeEditProfileModal);
+
+    // FORM EDIT PROFILE SUBMIT
+    formEditProfile?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nama = document.getElementById('edit-nama')?.value.trim();
+        const nik = document.getElementById('edit-nik')?.value.trim();
+        const email = document.getElementById('edit-email')?.value.trim().toLowerCase();
+        const divisi = document.getElementById('edit-divisi')?.value;
+
+        const newFaceVector = Array.from({ length: 128 }, () => Math.random() * 2 - 1);
+
+        let newAvatarUrl = state.currentUser ? state.currentUser.avatar : 'assets/headshot_male.png';
+        if (editWebcamVideo && state.editCameraStream) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 300; canvas.height = 400;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(editWebcamVideo, 0, 0, 300, 400);
+            newAvatarUrl = canvas.toDataURL('image/jpeg', 0.85);
+        }
+
+        const updatedUser = {
+            ...state.currentUser,
+            name: nama,
+            nik: nik,
+            email: email,
+            dept: divisi,
+            avatar: newAvatarUrl
+        };
+
+        state.currentUser = updatedUser;
+        localStorage.setItem('lumina_session_user', JSON.stringify(updatedUser));
+        applyUserSession(updatedUser);
+
+        // Update in employees list
+        const idx = state.employees.findIndex(emp => emp.id === updatedUser.id || emp.email === updatedUser.email);
+        if (idx !== -1) {
+            state.employees[idx].name = nama;
+            state.employees[idx].dept = divisi;
+            state.employees[idx].avatar = newAvatarUrl;
+        }
+
+        renderDashboardTable();
+        renderRecordsTable();
+        renderRosterGrid();
+
+        await submitToAppsScript({
+            action: 'register', // Appends or updates user in Sheets
+            nama: nama,
+            nik: nik,
+            email: email,
+            faceEmbedding: newFaceVector,
+            divisi: divisi,
+            role: updatedUser.role || 'karyawan'
+        });
+
+        closeEditProfileModal();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Profil & Sampel Wajah Diperbarui!',
+            html: `
+                <div style="text-align:center;">
+                    <img src="${newAvatarUrl}" style="width:90px; height:120px; border-radius:12px; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
+                    <h3 style="color:#00f2fe;">${nama}</h3>
+                    <p style="color:#9ca3af; font-size:12px;">Sampel Vektor Wajah Baru Berhasil Disimpan ke Google Sheets Database!</p>
+                </div>
+            `,
+            background: '#0f1422',
+            color: '#fff',
+            confirmButtonColor: '#00f2fe'
+        });
     });
 
     // FACE REGISTRATION ENROLLMENT CAMERA (PORTRAIT)
@@ -239,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let avatarUrl = 'assets/headshot_male.png';
         if (regWebcamVideo && state.regCameraStream) {
             const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 400; // Portrait Snapshot
+            canvas.width = 300; canvas.height = 400;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(regWebcamVideo, 0, 0, 300, 400);
             avatarUrl = canvas.toDataURL('image/jpeg', 0.85);
@@ -266,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.registeredEmployees.unshift(newEmp);
         state.employees.unshift(newEmp);
-        DEFAULT_USERS.push({ email, password, name: nama, role, dept: divisi, avatar: avatarUrl });
+        DEFAULT_USERS.push({ email, password, name: nama, role, dept: divisi, avatar: avatarUrl, nik: nik });
 
         renderDashboardTable();
         renderRecordsTable();
@@ -429,6 +563,8 @@ document.addEventListener('DOMContentLoaded', () => {
         state.currentUser = null;
         state.currentScreen = 'login';
         stopWebcamStream();
+        stopEditCamera();
+        stopEnrollmentCamera();
         if (mainSidebar) mainSidebar.classList.add('hidden');
         if (mainTopbar) mainTopbar.classList.add('hidden');
         if (mainContentArea) mainContentArea.style.marginLeft = '0';
