@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceTrack AI Sistem Absensi Karyawan | Lumina Attendance</title>
+    <title>Lumina FaceTrack AI - Sistem Absensi Karyawan</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,12 +19,15 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-theme">
     <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <!-- Sidebar Navigation (Hidden when in Login screen) -->
+        <aside class="sidebar hidden" id="main-sidebar">
             <div class="sidebar-header">
                 <div class="logo-box">
                     <img src="assets/logo.png" alt="Lumina Logo" class="logo-img">
@@ -41,7 +44,7 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="nav-item active" data-target="dashboard">
+                    <li class="nav-item admin-only" data-target="dashboard">
                         <i data-lucide="layout-dashboard"></i>
                         <span>Dashboard Admin</span>
                     </li>
@@ -62,7 +65,7 @@
                         <i data-lucide="file-text"></i>
                         <span>Riwayat Absensi</span>
                     </li>
-                    <li class="nav-item" data-target="roster">
+                    <li class="nav-item admin-only" data-target="roster">
                         <i data-lucide="users"></i>
                         <span>Roster Karyawan</span>
                     </li>
@@ -74,21 +77,25 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div class="user-pill">
-                    <img src="assets/headshot_male.png" alt="Alex Vance" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Alex Vance</span>
-                        <span class="user-role">Administrator Sistem</span>
+                <div class="user-pill flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <img src="assets/headshot_male.png" alt="User Avatar" class="user-avatar" id="sidebar-user-avatar">
+                        <div class="user-info">
+                            <span class="user-name" id="sidebar-user-name">Alex Vance</span>
+                            <span class="user-role" id="sidebar-user-role">Administrator Sistem</span>
+                        </div>
                     </div>
-                    <i data-lucide="settings" class="settings-icon"></i>
+                    <button class="btn btn-sm btn-outline text-rose-400 border-rose-500/30" id="btn-logout" title="Logout">
+                        <i data-lucide="log-out"></i>
+                    </button>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Top Navbar -->
-            <header class="topbar">
+        <main class="main-content" id="main-content-area" style="margin-left: 0;">
+            <!-- Top Navbar (Hidden when in Login screen) -->
+            <header class="topbar hidden" id="main-topbar">
                 <div class="page-title-box">
                     <h1 id="page-title">Dashboard Admin</h1>
                     <p id="page-subtitle" class="text-muted">Metrik presensi biometrik real-time & monitoring kecerdasan buatan</p>
@@ -109,8 +116,51 @@
                 </div>
             </header>
 
+            <!-- Screen 0: Halaman Login (Active Default when no session) -->
+            <section id="screen-login" class="screen-view active">
+                <div class="login-wrapper">
+                    <div class="login-card glassmorphism">
+                        <div class="login-header">
+                            <div class="logo-box justify-center mb-2">
+                                <img src="assets/logo.png" alt="Lumina Logo" class="logo-img-lg">
+                            </div>
+                            <h2 class="login-title">Lumina FaceTrack AI</h2>
+                            <p class="text-muted">Sistem Presensi Karyawan Biometrik Wajah & GPS Geofence</p>
+                        </div>
+
+                        <!-- Role Selector Tabs -->
+                        <div class="login-role-tabs">
+                            <button type="button" class="role-tab active" id="tab-login-admin" data-role="admin">
+                                Login Admin
+                            </button>
+                            <button type="button" class="role-tab" id="tab-login-karyawan" data-role="karyawan">
+                                Login Karyawan
+                            </button>
+                        </div>
+
+                        <form id="form-login" class="login-form">
+                            <div class="form-group">
+                                <label for="login-email">Email Karyawan / Admin</label>
+                                <input type="email" id="login-email" class="form-input-lg" placeholder="nama@company.com" value="admin@lumina.ai" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" class="form-input-lg" placeholder="••••••••" value="admin123" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg shadow-cyan">
+                                <i data-lucide="log-in"></i> Masuk Ke Sistem Presensi
+                            </button>
+                        </form>
+
+                        <div class="login-footer text-muted">
+                            <small>Tersinkronisasi dengan Google Sheets DB & Google Apps Script REST API</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Screen 1 & 7: Dashboard Admin -->
-            <section id="screen-dashboard" class="screen-view active">
+            <section id="screen-dashboard" class="screen-view">
                 <div class="metrics-grid">
                     <div class="metric-card glassmorphism card-glow-cyan">
                         <div class="metric-icon">
@@ -546,23 +596,6 @@
                                 <span class="swatch-name">Amber Warning</span>
                                 <span class="swatch-code">#f59e0b</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="ds-section margin-top">
-                        <h2>2. Komponen Tombol & Badge</h2>
-                        <div class="ds-row">
-                            <button class="btn btn-primary">Tombol Utama</button>
-                            <button class="btn btn-secondary">Tombol Sekunder</button>
-                            <button class="btn btn-outline">Tombol Garis Tepi</button>
-                            <button class="btn btn-ghost">Tombol Transparan</button>
-                        </div>
-                        <div class="ds-row margin-top">
-                            <span class="badge badge-cyan">Badge Cyan</span>
-                            <span class="badge badge-success">Badge Sukses</span>
-                            <span class="badge badge-warning">Badge Peringatan</span>
-                            <span class="badge badge-danger">Badge Bahaya</span>
-                            <span class="badge badge-glow">Badge Special Glow</span>
                         </div>
                     </div>
                 </div>

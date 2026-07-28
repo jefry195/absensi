@@ -1,6 +1,7 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
 // Integrated with Google Sheets DB & Google Apps Script Backend
+// Interactive Login System & Session Management
 // Bahasa Indonesia Version
 // ==========================================================================
 
@@ -19,9 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Pre-registered Default Users for Instant Testing
+    const DEFAULT_USERS = [
+        { email: 'admin@lumina.ai', password: 'admin123', name: 'Alex Vance', role: 'admin', dept: 'System Admin', avatar: 'assets/headshot_male.png' },
+        { email: 'karyawan@company.com', password: 'karyawan123', name: 'Sophia Chen', role: 'karyawan', dept: 'UX Design', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
+        { email: 'marcus@company.com', password: 'password123', name: 'Marcus Brody', role: 'karyawan', dept: 'Logistics', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80' }
+    ];
+
     // Application State
     const state = {
-        currentScreen: 'dashboard',
+        currentUser: null,
+        currentScreen: 'login',
         isCameraActive: false,
         cameraStream: null,
         simulatedScanning: false,
@@ -54,12 +63,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let leafletMap = null;
     let mapMarkers = [];
 
+    // DOM Elements
     const navItems = document.querySelectorAll('.nav-item');
     const screenViews = document.querySelectorAll('.screen-view');
+    const mainSidebar = document.getElementById('main-sidebar');
+    const mainTopbar = document.getElementById('main-topbar');
+    const mainContentArea = document.getElementById('main-content-area');
     const pageTitle = document.getElementById('page-title');
     const pageSubtitle = document.getElementById('page-subtitle');
+    const sidebarUserName = document.getElementById('sidebar-user-name');
+    const sidebarUserRole = document.getElementById('sidebar-user-role');
+    const sidebarUserAvatar = document.getElementById('sidebar-user-avatar');
+    const btnLogout = document.getElementById('btn-logout');
 
     const titlesMap = {
+        'login': { title: 'Login Sistem', sub: 'Pilih role & autentikasi masuk' },
         'dashboard': { title: 'Dashboard Admin', sub: 'Metrik presensi biometrik real-time & sinkronisasi cloud Google Sheets' },
         'face-scan': { title: 'Scan Presensi Wajah', sub: 'Pengenalan wajah neural akurasi tinggi & API Google Apps Script' },
         'kiosk-mode': { title: 'Mode Kiosk Gate Presensi', sub: 'Antarmuka scan gate otomatis layar penuh' },
@@ -68,6 +86,144 @@ document.addEventListener('DOMContentLoaded', () => {
         'roster': { title: 'Roster Karyawan & Profil Biometrik', sub: 'Direktori karyawan terdaftar dan vektor jaringan saraf' },
         'design-system': { title: 'Sistem Desain Lumina', sub: 'Token mode gelap, komponen UI glassmorphic & panduan gaya' }
     };
+
+    // Initialize Login System & Session Check
+    function checkSession() {
+        const savedSession = localStorage.getItem('lumina_session_user');
+        if (savedSession) {
+            try {
+                const user = JSON.parse(savedSession);
+                state.currentUser = user;
+                applyUserSession(user);
+                return;
+            } catch (e) {
+                localStorage.removeItem('lumina_session_user');
+            }
+        }
+        showLoginScreen();
+    }
+
+    function showLoginScreen() {
+        state.currentUser = null;
+        state.currentScreen = 'login';
+        if (mainSidebar) mainSidebar.classList.add('hidden');
+        if (mainTopbar) mainTopbar.classList.add('hidden');
+        if (mainContentArea) mainContentArea.style.marginLeft = '0';
+
+        screenViews.forEach(view => {
+            if (view.id === 'screen-login') {
+                view.classList.add('active');
+            } else {
+                view.classList.remove('active');
+            }
+        });
+    }
+
+    function applyUserSession(user) {
+        if (mainSidebar) mainSidebar.classList.remove('hidden');
+        if (mainTopbar) mainTopbar.classList.remove('hidden');
+        if (mainContentArea) mainContentArea.style.marginLeft = '260px';
+
+        if (sidebarUserName) sidebarUserName.textContent = user.name || 'User';
+        if (sidebarUserRole) sidebarUserRole.textContent = user.role === 'admin' ? 'Administrator Sistem' : 'Karyawan Aktif';
+        if (sidebarUserAvatar && user.avatar) sidebarUserAvatar.src = user.avatar;
+
+        // Toggle Admin-only menu options
+        const adminElements = document.querySelectorAll('.admin-only');
+        adminElements.forEach(el => {
+            if (user.role === 'admin') {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+
+        // Redirect based on role
+        if (user.role === 'admin') {
+            switchScreen('dashboard');
+        } else {
+            switchScreen('face-scan');
+        }
+    }
+
+    // Role Tab Switcher in Login Card
+    let selectedLoginRole = 'admin';
+    const tabAdmin = document.getElementById('tab-login-admin');
+    const tabKaryawan = document.getElementById('tab-login-karyawan');
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+
+    tabAdmin?.addEventListener('click', () => {
+        selectedLoginRole = 'admin';
+        tabAdmin.classList.add('active');
+        tabKaryawan?.classList.remove('active');
+        if (loginEmailInput) loginEmailInput.value = 'admin@lumina.ai';
+        if (loginPasswordInput) loginPasswordInput.value = 'admin123';
+    });
+
+    tabKaryawan?.addEventListener('click', () => {
+        selectedLoginRole = 'karyawan';
+        tabKaryawan.classList.add('active');
+        tabAdmin?.classList.remove('active');
+        if (loginEmailInput) loginEmailInput.value = 'karyawan@company.com';
+        if (loginPasswordInput) loginPasswordInput.value = 'karyawan123';
+    });
+
+    // Form Login Submit
+    document.getElementById('form-login')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = loginEmailInput?.value.trim().toLowerCase();
+        const password = loginPasswordInput?.value.trim();
+
+        const foundUser = DEFAULT_USERS.find(u => u.email.toLowerCase() === email && u.password === password);
+
+        if (foundUser) {
+            state.currentUser = foundUser;
+            localStorage.setItem('lumina_session_user', JSON.stringify(foundUser));
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Login Berhasil!',
+                text: `Selamat datang kembali, ${foundUser.name}`,
+                timer: 1500,
+                showConfirmButton: false,
+                background: '#0f1422',
+                color: '#fff'
+            }).then(() => {
+                applyUserSession(foundUser);
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Gagal!',
+                text: 'Email atau password yang Anda masukkan tidak valid.',
+                background: '#0f1422',
+                color: '#fff',
+                confirmButtonColor: '#00f2fe'
+            });
+        }
+    });
+
+    // Logout Action
+    btnLogout?.addEventListener('click', () => {
+        Swal.fire({
+            title: 'Konfirmasi Logout',
+            text: 'Apakah Anda yakin ingin keluar dari sistem presensi?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Logout',
+            cancelButtonText: 'Batal',
+            background: '#0f1422',
+            color: '#fff',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#374151'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                localStorage.removeItem('lumina_session_user');
+                showLoginScreen();
+            }
+        });
+    });
 
     function switchScreen(targetScreenId) {
         state.currentScreen = targetScreenId;
@@ -186,6 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Check session on load
+    checkSession();
     syncWithGoogleSheets();
     initDashboardCharts();
 
@@ -518,16 +676,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const nowStr = new Date().toLocaleTimeString();
 
-            document.getElementById('scan-result-name').textContent = 'Alex Vance';
+            document.getElementById('scan-result-name').textContent = state.currentUser ? state.currentUser.name : 'Alex Vance';
             document.getElementById('scan-result-id').textContent = 'EMP-8026';
             document.getElementById('scan-result-time').textContent = nowStr;
-            document.getElementById('scan-result-img').src = 'assets/headshot_male.png';
+            if (state.currentUser && state.currentUser.avatar) {
+                document.getElementById('scan-result-img').src = state.currentUser.avatar;
+            }
 
             submitToAppsScript({
                 action: 'getAttendance',
                 checkType: 'IN',
                 userId: 'EMP-8026',
-                nama: 'Alex Vance',
+                nama: state.currentUser ? state.currentUser.name : 'Alex Vance',
                 tanggal: new Date().toISOString().slice(0,10),
                 jam: nowStr,
                 latitude: state.geofence.lat,
@@ -541,9 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'stream-item';
                 li.innerHTML = `
-                    <img src="assets/headshot_male.png" class="stream-thumb">
+                    <img src="${state.currentUser && state.currentUser.avatar ? state.currentUser.avatar : 'assets/headshot_male.png'}" class="stream-thumb">
                     <div class="stream-info">
-                        <span class="stream-name">Alex Vance</span>
+                        <span class="stream-name">${state.currentUser ? state.currentUser.name : 'Alex Vance'}</span>
                         <span class="stream-time">${nowStr} • Skor 99.8%</span>
                     </div>
                     <span class="badge badge-success">Presensi Masuk</span>
