@@ -22,6 +22,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- face-api.js for Real-time WebCam Face Recognition -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="dark-theme">
@@ -325,28 +328,29 @@
                 </div>
             </section>
 
-            <!-- Screen 2: Scan Presensi Wajah -->
+            <!-- Screen 2: Scan Presensi Wajah (Webcam Real Camera Enabled) -->
             <section id="screen-face-scan" class="screen-view">
                 <div class="face-scan-wrapper">
                     <div class="face-scan-main">
                         <div class="cam-container glassmorphism">
                             <div class="cam-header flex-wrap gap-2">
                                 <div class="cam-status">
-                                    <span class="status-dot active"></span>
-                                    <span>Kamera AI #01 - Gate Utama</span>
+                                    <span class="status-dot active" id="camera-status-dot"></span>
+                                    <span id="camera-status-text">Kamera AI - Siap Mengakses Webcam</span>
                                 </div>
                                 <div class="cam-controls flex-wrap gap-2">
-                                    <button class="btn btn-sm btn-secondary" id="btn-toggle-camera">
-                                        <i data-lucide="video"></i> Kamera
+                                    <button class="btn btn-sm btn-primary" id="btn-start-camera">
+                                        <i data-lucide="video"></i> Buka Kamera HP / PC
                                     </button>
                                     <button class="btn btn-sm btn-secondary" id="btn-sim-scan">
-                                        <i data-lucide="zap"></i> Presensi Wajah
+                                        <i data-lucide="camera"></i> Scan & Presensi Wajah
                                     </button>
                                 </div>
                             </div>
                             
                             <div class="video-viewport">
-                                <video id="webcam-video" autoplay playsinline muted class="video-element hidden"></video>
+                                <!-- Actual Live Video Stream from Device Camera -->
+                                <video id="webcam-video" autoplay playsinline muted class="video-element"></video>
                                 <canvas id="scanner-canvas" class="scanner-canvas"></canvas>
 
                                 <div class="reticle-box" id="scan-reticle">
@@ -372,7 +376,7 @@
                                     </div>
 
                                     <div class="reticle-status-badge" id="reticle-status">
-                                        POSISIKAN WAJAH DI DALAM BINGKAI
+                                        MINTA IZIN KAMERA DEPAN HP / WEBCAM
                                     </div>
                                 </div>
 
@@ -382,7 +386,7 @@
                                         <span class="val font-mono" id="val-fps">60</span>
                                     </div>
                                     <div class="telemetry-item">
-                                        <span class="label">KEMIRIPAN</span>
+                                        <span class="label">PENCOCOKAN GS</span>
                                         <span class="val font-mono text-cyan" id="val-conf">99.8%</span>
                                     </div>
                                     <div class="telemetry-item">
@@ -399,7 +403,7 @@
                         <div class="card glassmorphism" id="result-card">
                             <div class="card-header">
                                 <h3>Hasil Verifikasi Biometrik</h3>
-                                <span class="badge badge-success" id="verify-badge">Siap</span>
+                                <span class="badge badge-success" id="verify-badge">Siap Kamera</span>
                             </div>
                             <div class="card-body text-center">
                                 <div class="verified-avatar-wrapper">
@@ -413,7 +417,7 @@
                                 
                                 <div class="match-details-grid">
                                     <div class="detail-box">
-                                        <span class="detail-label">ID Karyawan</span>
+                                        <span class="detail-label">ID Karyawan GS</span>
                                         <span class="detail-val font-mono" id="scan-result-id">EMP-8026</span>
                                     </div>
                                     <div class="detail-box">
@@ -421,18 +425,18 @@
                                         <span class="detail-val font-mono text-cyan" id="scan-result-time">08:24:12 WIB</span>
                                     </div>
                                     <div class="detail-box">
-                                        <span class="detail-label">Tag Lokasi</span>
+                                        <span class="detail-label">Geofence GPS</span>
                                         <span class="detail-val" id="scan-result-loc">Gedung Utama HQ - Lt 4</span>
                                     </div>
                                     <div class="detail-box">
-                                        <span class="detail-label">Skor Wajah</span>
+                                        <span class="detail-label">Skor Kemiripan GS</span>
                                         <span class="detail-val font-mono text-green" id="scan-result-score">99.8%</span>
                                     </div>
                                 </div>
 
                                 <div class="scan-action-buttons">
                                     <button class="btn btn-primary btn-block" id="btn-confirm-attendance">
-                                        <i data-lucide="check-circle"></i> Konfirmasi Presensi
+                                        <i data-lucide="check-circle"></i> Konfirmasi Presensi Masuk
                                     </button>
                                 </div>
                             </div>
@@ -477,8 +481,8 @@
                             <div class="kiosk-banner hidden" id="kiosk-welcome-banner">
                                 <i data-lucide="check-circle" class="kiosk-success-icon"></i>
                                 <div class="kiosk-banner-text">
-                                    <h2>SELAMAT DATANG, ALEX VANCE!</h2>
-                                    <p>Presensi berhasil dicatat pada hari ini pukul 08:24 WIB</p>
+                                    <h2>SELAMAT DATANG!</h2>
+                                    <p>Presensi berhasil dicatat pada hari ini</p>
                                 </div>
                             </div>
                         </div>
