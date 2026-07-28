@@ -1,6 +1,6 @@
 /* ==========================================================================
    FaceTrack AI Attendance System - Design System & Responsive Styles
-   Lumina Attendance - Portrait Camera Viewport Update
+   Lumina Attendance - Portrait Camera & Full Mobile Responsiveness Refinement
    ========================================================================== */
 
 :root {
@@ -68,7 +68,7 @@ body.dark-theme {
 .sidebar-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(4px);
     z-index: 990;
     animation: fadeIn 0.2s ease;
@@ -587,17 +587,22 @@ body.dark-theme {
     color: var(--text-muted);
 }
 
+.form-input,
+.form-select,
 .form-input-lg {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: var(--radius-md);
     outline: none;
     font-size: 13px;
     transition: var(--transition);
+    width: 100%;
 }
 
+.form-input:focus,
+.form-select:focus,
 .form-input-lg:focus {
     border-color: var(--primary-cyan);
     box-shadow: 0 0 12px var(--primary-cyan-glow);
@@ -614,7 +619,7 @@ body.dark-theme {
 /* Dashboard Metrics Grid */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -686,27 +691,37 @@ body.dark-theme {
     gap: 20px;
 }
 
+.dashboard-main-col,
+.dashboard-side-col {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
 .chart-container {
     height: 260px;
     position: relative;
+    width: 100%;
 }
 
 .chart-container-sm {
     height: 200px;
     position: relative;
+    width: 100%;
 }
 
 /* Data Tables */
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    min-width: 600px;
+    min-width: 550px;
 }
 
 .data-table th {
@@ -753,13 +768,13 @@ body.dark-theme {
     font-family: var(--font-mono);
 }
 
-/* PORTRAIT CAMERA VIEWPORT (PORTRAIT 3:4 OR 9:16 HP STYLE) */
+/* PORTRAIT CAMERA VIEWPORT FOR SCANNER & POP-UP MODALS (3:4 PORTRAIT RATIO) */
 .video-viewport {
     position: relative;
     width: 100%;
-    max-width: 440px;
+    max-width: 380px;
     margin: 0 auto;
-    aspect-ratio: 3 / 4; /* Portrait Camera Aspect Ratio */
+    aspect-ratio: 3 / 4; /* Portrait Camera Ratio */
     background: #000;
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -775,16 +790,19 @@ body.dark-theme {
     display: block;
 }
 
+/* PORTRAIT MINI CAM PREVIEW FOR MODALS (REGISTRATION & EDIT PROFILE) */
 .mini-cam-preview {
     position: relative;
     width: 100%;
-    max-width: 280px;
+    max-width: 240px;
     margin: 0 auto;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 3 / 4 !important; /* STRICT PORTRAIT MODAL CAMERA */
+    height: 280px !important;
     border-radius: var(--radius-md);
     overflow: hidden;
-    border: 1px solid var(--primary-cyan);
+    border: 2px solid var(--primary-cyan);
     background: #000;
+    box-shadow: 0 0 15px var(--primary-cyan-glow);
 }
 
 .scan-target-img {
@@ -850,8 +868,8 @@ body.dark-theme {
     top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 220px;
-    height: 280px; /* Portrait Reticle Proportions */
+    width: 200px;
+    height: 260px;
     border: 1px dashed rgba(0, 242, 254, 0.6);
     border-radius: var(--radius-lg);
     pointer-events: none;
@@ -892,8 +910,8 @@ body.dark-theme {
 }
 
 .face-mesh-svg {
-    width: 170px;
-    height: 170px;
+    width: 160px;
+    height: 160px;
 }
 
 .mesh-poly { stroke: var(--primary-cyan); stroke-width: 1; fill: rgba(0, 242, 254, 0.05); }
@@ -1112,8 +1130,8 @@ body.dark-theme {
 }
 
 .kiosk-camera-frame {
-    aspect-ratio: 3 / 4; /* Portrait Mode Kiosk */
-    max-width: 480px;
+    aspect-ratio: 3 / 4;
+    max-width: 420px;
     margin: 0 auto;
     position: relative;
     border-radius: var(--radius-lg);
@@ -1263,30 +1281,7 @@ body.dark-theme {
     font-size: 11px;
 }
 
-/* Design System Screen */
-.design-system-container {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-.color-palette-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 14px;
-    margin-top: 14px;
-}
-
-.color-swatch-card {
-    height: 90px;
-    border-radius: var(--radius-md);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-}
-
-/* Modal */
+/* Modal Styling */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1297,6 +1292,7 @@ body.dark-theme {
     align-items: center;
     justify-content: center;
     padding: 16px;
+    overflow-y: auto;
 }
 
 .modal-overlay.hidden {
@@ -1307,6 +1303,8 @@ body.dark-theme {
     width: 540px;
     max-width: 100%;
     border-color: var(--primary-cyan);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-header {
@@ -1345,57 +1343,69 @@ body.dark-theme {
 .text-muted { color: var(--text-muted); }
 .font-mono { font-family: var(--font-mono); }
 
-/* RESPONSIVE MEDIA QUERIES */
+/* FULL RESPONSIVE MEDIA QUERIES FOR SMARTPHONES & TABLETS */
 @media (max-width: 1024px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
-    .face-scan-wrapper { grid-template-columns: 1fr; }
-    .map-layout-grid { grid-template-columns: 1fr; }
-    .map-wrapper, .map-side-panel { height: 480px; }
+    .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
+    .face-scan-wrapper { grid-template-columns: 1fr; gap: 16px; }
+    .map-layout-grid { grid-template-columns: 1fr; gap: 16px; }
+    .map-wrapper, .map-side-panel { height: 460px; }
 }
 
 @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.mobile-open { transform: translateX(0); box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); }
     .mobile-close-btn { display: block !important; }
-    .main-content { margin-left: 0 !important; padding: 16px 12px; }
+    .main-content { margin-left: 0 !important; padding: 14px 10px; }
     .mobile-hamburger-btn { display: inline-flex !important; }
     .hidden-mobile { display: none !important; }
-    .topbar { margin-bottom: 18px; }
+    
+    .topbar { margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     .page-title-box h1 { font-size: 18px; }
+    
     .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .metric-card { padding: 14px; gap: 12px; }
+    .metric-card { padding: 14px; gap: 10px; }
     .metric-icon { width: 40px; height: 40px; }
-    .metric-number { font-size: 20px; }
+    .metric-number { font-size: 18px; }
     
     .video-viewport {
         max-width: 100%;
-        aspect-ratio: 3 / 4; /* Portrait mode on mobile */
+        aspect-ratio: 3 / 4;
     }
     
+    .mini-cam-preview {
+        max-width: 100% !important;
+        height: 260px !important;
+        aspect-ratio: 3 / 4 !important;
+    }
+
     .reticle-box {
-        width: 180px;
-        height: 230px;
+        width: 170px;
+        height: 220px;
     }
     
     .match-details-grid { grid-template-columns: 1fr; }
-    .login-card { padding: 24px 18px; width: 100%; }
-    .login-title { font-size: 19px; }
-    .kiosk-container { padding: 16px; }
+    .login-card { padding: 20px 16px; width: 100%; }
+    .login-title { font-size: 18px; }
+    .kiosk-container { padding: 14px; }
     .kiosk-clock { font-size: 18px; }
 }
 
 @media (max-width: 480px) {
     .metrics-grid { grid-template-columns: 1fr; }
     .btn { padding: 8px 12px; font-size: 12px; }
-    .btn-lg { padding: 12px 18px; font-size: 13px; }
+    .btn-lg { padding: 12px 16px; font-size: 13px; }
     
     .video-viewport {
         aspect-ratio: 3 / 4;
     }
     
+    .mini-cam-preview {
+        height: 240px !important;
+    }
+
     .reticle-box {
-        width: 160px;
-        height: 210px;
+        width: 150px;
+        height: 200px;
     }
     
     .reticle-status-badge { font-size: 9px; padding: 3px 8px; bottom: -28px; }
