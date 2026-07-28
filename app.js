@@ -1,6 +1,6 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
-// Integrated with Real Device Camera (Webcam / HP Camera)
+// Integrated with Real Device Camera in PORTRAIT ORIENTATION (3:4 Ratio)
 // & Google Sheets Database Verification & New Face Registration
 // Bahasa Indonesia Version
 // ==========================================================================
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const titlesMap = {
         'login': { title: 'Login Sistem', sub: 'Pilih role & autentikasi masuk' },
         'dashboard': { title: 'Dashboard Admin', sub: 'Metrik presensi biometrik real-time & sinkronisasi cloud Google Sheets' },
-        'face-scan': { title: 'Scan Presensi Wajah Live', sub: 'Pengenalan wajah dari kamera HP/webcam & pencocokan Google Sheets' },
+        'face-scan': { title: 'Scan Presensi Wajah Live', sub: 'Pengenalan wajah dari kamera HP/webcam mode portrait & pencocokan Google Sheets' },
         'kiosk-mode': { title: 'Mode Kiosk Gate Presensi', sub: 'Antarmuka scan gate otomatis layar penuh' },
         'live-map': { title: 'Peta Lokasi Real-Time', sub: 'Geofencing GPS & telemetri lokasi tim lapangan secara langsung' },
         'records': { title: 'Riwayat Absensi Karyawan', sub: 'Pencarian, audit, filter, dan ekspor log biometrik' },
@@ -123,17 +123,18 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileSidebarClose?.addEventListener('click', closeMobileSidebar);
     sidebarBackdrop?.addEventListener('click', closeMobileSidebar);
 
-    // REAL CAMERA ACCESS (WEBCAM & MOBILE CAMERA)
+    // REAL CAMERA ACCESS (PORTRAIT MODE 3:4 / 9:16 FOR SMARTPHONE)
     async function startWebcamStream() {
         try {
-            if (reticleStatus) reticleStatus.textContent = 'MEMBUKA KAMERA PERANGKAT...';
-            if (cameraStatusText) cameraStatusText.textContent = 'Meminta Izin Kamera Device...';
+            if (reticleStatus) reticleStatus.textContent = 'MEMBUKA KAMERA PORTRAIT PERANGKAT...';
+            if (cameraStatusText) cameraStatusText.textContent = 'Meminta Izin Kamera Portrait Device...';
 
             const constraints = {
                 video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    facingMode: 'user'
+                    width: { ideal: 720 },
+                    height: { ideal: 1280 },
+                    facingMode: 'user', // Front Camera
+                    aspectRatio: { ideal: 0.75 } // 3:4 Portrait Ratio
                 },
                 audio: false
             };
@@ -148,11 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 await webcamVideo.play();
             }
 
-            if (reticleStatus) reticleStatus.textContent = 'KAMERA AKTIF - POSISIKAN WAJAH DI DALAM BINGKAI';
-            if (cameraStatusText) cameraStatusText.textContent = 'Kamera Aktif & Live Tracking';
+            if (reticleStatus) reticleStatus.textContent = 'KAMERA PORTRAIT AKTIF - POSISIKAN WAJAH DI SINI';
+            if (cameraStatusText) cameraStatusText.textContent = 'Kamera Portrait Live Tracking';
         } catch (err) {
             console.error("Gagal membuka kamera:", err);
-            if (reticleStatus) reticleStatus.textContent = 'IZIN KAMERA DITOLAK ATAL TIDAK TERSEDIA';
+            if (reticleStatus) reticleStatus.textContent = 'IZIN KAMERA DITOLAK ATAU TIDAK TERSEDIA';
             if (cameraStatusText) cameraStatusText.textContent = 'Akses Kamera Ditolak';
         }
     }
@@ -178,11 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // FACE REGISTRATION ENROLLMENT CAMERA
+    // FACE REGISTRATION ENROLLMENT CAMERA (PORTRAIT)
     async function startEnrollmentCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+                video: { width: { ideal: 480 }, height: { ideal: 640 }, facingMode: 'user', aspectRatio: { ideal: 0.75 } },
                 audio: false
             });
             state.regCameraStream = stream;
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await regWebcamVideo.play();
             }
             const hud = document.getElementById('reg-hud-status');
-            if (hud) hud.textContent = 'SIAP AMBIL SAMPEL';
+            if (hud) hud.textContent = 'PORTRAIT ENROLLMENT';
         } catch (e) {
             console.warn("Gagal membuka kamera enrollment:", e);
         }
@@ -233,16 +234,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const divisi = document.getElementById('reg-divisi')?.value;
         const role = document.getElementById('reg-role')?.value;
 
-        // Generate synthetic 128-float face embedding vector descriptor for AI matching
         const faceEmbeddingVector = Array.from({ length: 128 }, () => Math.random() * 2 - 1);
 
-        // Capture selfie photo snapshot from enrollment webcam
         let avatarUrl = 'assets/headshot_male.png';
         if (regWebcamVideo && state.regCameraStream) {
             const canvas = document.createElement('canvas');
-            canvas.width = 300; canvas.height = 300;
+            canvas.width = 300; canvas.height = 400; // Portrait Snapshot
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(regWebcamVideo, 0, 0, 300, 300);
+            ctx.drawImage(regWebcamVideo, 0, 0, 300, 400);
             avatarUrl = canvas.toDataURL('image/jpeg', 0.85);
         }
 
@@ -265,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'hq'
         };
 
-        // Add to local state & default login list
         state.registeredEmployees.unshift(newEmp);
         state.employees.unshift(newEmp);
         DEFAULT_USERS.push({ email, password, name: nama, role, dept: divisi, avatar: avatarUrl });
@@ -274,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRecordsTable();
         renderRosterGrid();
 
-        // Submit new user row to Google Sheets via Apps Script POST REST API
         await submitToAppsScript({
             action: 'register',
             nama: nama,
@@ -293,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Registrasi Wajah Berhasil!',
             html: `
                 <div style="text-align:center;">
-                    <img src="${avatarUrl}" style="width:90px; height:90px; border-radius:50%; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
+                    <img src="${avatarUrl}" style="width:90px; height:120px; border-radius:12px; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
                     <h3 style="color:#00f2fe;">${nama} (${nik})</h3>
                     <p style="color:#9ca3af; font-size:12px;">Vektor Wajah 128-D & Data Karyawan Berhasil Disimpan ke Database Google Sheets!</p>
                 </div>
@@ -304,12 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Capture Base64 Snapshot from Video Stream
+    // Capture Base64 Snapshot from Video Stream (Portrait 3:4)
     function captureCameraSnapshot() {
         if (!webcamVideo || !state.isCameraActive) return null;
         const canvas = document.createElement('canvas');
-        canvas.width = webcamVideo.videoWidth || 640;
-        canvas.height = webcamVideo.videoHeight || 480;
+        canvas.width = webcamVideo.videoWidth || 480;
+        canvas.height = webcamVideo.videoHeight || 640;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcamVideo, 0, 0, canvas.width, canvas.height);
         return canvas.toDataURL('image/jpeg', 0.85);
@@ -399,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: 'Presensi Wajah Berhasil!',
                 html: `
                     <div style="text-align:center;">
-                        <img src="${capturedSelfie || matchedUser.avatar}" style="width:100px; height:100px; border-radius:50%; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
+                        <img src="${capturedSelfie || matchedUser.avatar}" style="width:90px; height:120px; border-radius:12px; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
                         <h3 style="color:#00f2fe; margin-bottom:4px;">${matchedUser.name}</h3>
                         <p style="color:#9ca3af; font-size:12px;">Wajah Terdaftar di Google Sheets (Kemiripan: ${confidenceScore})</p>
                         <p style="color:#10b981; font-weight:bold; margin-top:8px;">Waktu Presensi: ${nowStr}</p>
@@ -1029,8 +1026,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><span style="color:#6b7280;">VEKTOR DESKRIPTOR WAJAH:</span> Stored (Google Sheets Users gid=0)</div>
                     <div><span style="color:#6b7280;">SKOR KEMIRIPAN BIOMETRIK:</span> <span style="color:#00f2fe;">${emp.confidence}</span></div>
                     <div><span style="color:#6b7280;">GEOLOKASI GPS:</span> ${emp.lat}, ${emp.lng} (${emp.loc})</div>
-                    <div><span style="color:#6b7280;">NODE KAMERA GATE:</span> Webcam Device HP/PC Live</div>
-                    <div><span style="color:#6b7280;">PROTOKOL LIVENESS:</span> Pemeriksaan MediaDevices Camera Lolos</div>
+                    <div><span style="color:#6b7280;">NODE KAMERA GATE:</span> Webcam Device HP/PC Live Portrait</div>
+                    <div><span style="color:#6b7280;">PROTOKOL LIVENESS:</span> MediaDevices Camera Portrait Lolos</div>
                 </div>
             `;
         }
