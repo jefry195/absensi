@@ -2,9 +2,36 @@
 
 Panduan langkah demi langkah untuk melakukan deploy aplikasi ke Vercel (Frontend), Node.js Express (Backend), dan Google Apps Script (Database REST API).
 
+🌐 **Live Vercel Production URL**: [https://absensi-alpha-navy.vercel.app](https://absensi-alpha-navy.vercel.app)
+
 ---
 
-## 1. Google Apps Script Deployment (Backend REST API)
+## 1. Vercel Deployment (Frontend Single Page Application)
+
+### Konfigurasi `vercel.json` (Root & Frontend):
+File `vercel.json` telah dikonfigurasi untuk mencegah error 404 pada SPA routes:
+
+```json
+{
+  "version": 2,
+  "name": "absensi-karyawan-face-recognition",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
+```
+
+### Langkah Deploy Vercel:
+1. Hubungkan repository GitHub [https://github.com/jefry195/absensi](https://github.com/jefry195/absensi) ke Vercel Dashboard.
+2. Setiap kali ada commit baru ke branch `main`, Vercel secara otomatis melakukan pembaharuan build dan deployment.
+3. Aplikasi siap diakses secara HTTPS di [https://absensi-alpha-navy.vercel.app](https://absensi-alpha-navy.vercel.app).
+
+---
+
+## 2. Google Apps Script Deployment (Backend REST API)
 
 1. Buka [Google Sheets Database](https://docs.google.com/spreadsheets/d/1cJM7tAYKsfeTv7owtIunLIKxmLpSGQ9qqmR18h_Omd4/edit).
 2. Klik **Extensions > Apps Script** di menu atas.
@@ -15,11 +42,11 @@ Panduan langkah demi langkah untuk melakukan deploy aplikasi ke Vercel (Frontend
    - **Execute as**: `Me`
    - **Who has access**: `Anyone`
 7. Klik **Deploy**, lalu berikan izin otorisasi Google Account.
-8. Salin **Web App URL** (misalnya `https://script.google.com/macros/s/.../exec`).
+8. Salin **Web App URL** (`https://script.google.com/macros/s/AKfycbzOHaNtWI6vARI8aMnkoJh6oC06AzDR1sHDd21Q5R8VhqgG5f1soYnSNmIJHvXzjOM/exec`).
 
 ---
 
-## 2. Backend Node.js Express Deployment
+## 3. Backend Node.js Express Deployment
 
 ### Prasyarat:
 - Node.js v18+ atau v20+
@@ -37,28 +64,3 @@ cd attendance-app/backend
 npm install
 npm start
 ```
-
----
-
-## 3. Frontend React + Tailwind Deployment (Vercel)
-
-### Prasyarat:
-- Node.js & Vercel CLI atau GitHub Repository integration.
-
-### Jalankan Lokal:
-```bash
-cd attendance-app/frontend
-npm install
-npm run dev
-```
-
-### Deploy ke Vercel:
-1. Dorong kode `frontend` ke GitHub.
-2. Buka dashboard [Vercel](https://vercel.com).
-3. Buat **New Project** dan sambungkan repository GitHub.
-4. Set **Build Command**: `npm run build`
-5. Set **Output Directory**: `dist`
-6. Tambahkan Environment Variable:
-   - `VITE_API_BASE_URL`: `http://localhost:5000/api` atau URL backend produksi.
-   - `VITE_GOOGLE_SCRIPT_URL`: `https://script.google.com/macros/s/AKfycbzOHaNtWI6vARI8aMnkoJh6oC06AzDR1sHDd21Q5R8VhqgG5f1soYnSNmIJHvXzjOM/exec`
-7. Klik **Deploy**.

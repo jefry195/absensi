@@ -4,6 +4,8 @@
 
 Aplikasi **Absensi Karyawan Berbasis Face Recognition & GPS Geofence** modern, responsif, dan mudah digunakan berbasis teknologi Web. Sistem ini terintegrasi penuh dengan **Google Sheets** sebagai database utama, **Google Apps Script** sebagai REST API backend, serta **OpenStreetMap & Leaflet.js** untuk penentuan radius geofence lokasi kantor berbasis **Formula Haversine**.
 
+🌐 **Live Vercel Deployment**: [https://absensi-alpha-navy.vercel.app](https://absensi-alpha-navy.vercel.app)
+
 ---
 
 ## 🚀 Fitur Utama
@@ -42,69 +44,30 @@ Aplikasi **Absensi Karyawan Berbasis Face Recognition & GPS Geofence** modern, r
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
-
-- **Frontend**: React + Tailwind CSS, HTML5 Canvas, Framer Motion, SweetAlert2, Lucide Icons
-- **Backend Server**: Node.js (Express.js), JWT Authentication, bcryptjs, Rate Limiter
-- **Peta & GPS**: OpenStreetMap, Leaflet.js, Formula Haversine
-- **Database Backend**: Google Sheets API & Google Apps Script (GAS) Web App
-
----
-
-## 📁 Struktur Project
-
-```
-absensi/
-│
-├── index.html                           # Single Page Application HTML Markup
-├── styles.css                           # CSS Design System Dark Mode Glassmorphic
-├── app.js                               # Logic Presensi & Sinkronisasi Google Sheets
-├── assets/                              # Aset Gambar & Logo Lumina
-│
-├── attendance-app/                      # Project Full-Stack Modular React + Node.js
-│   ├── frontend/                        # Aplikasi React + Tailwind CSS (Vite)
-│   │   ├── pages/                       # Login, AdminDashboard, EmployeeDashboard
-│   │   ├── components/                  # FaceScanScanner, MapTracker, AttendanceRecords, GeofenceSettings, BonusModules
-│   │   └── package.json
-│   ├── backend/                         # Express Node.js Backend REST API
-│   │   ├── routes/                      # authRoutes, attendanceRoutes, settingsRoutes
-│   │   ├── services/                    # googleSheetService
-│   │   ├── utils/                       # haversine.js
-│   │   └── google-apps-script/
-│   │       └── Code.gs                  # REST API Script Google Apps Script
-│   └── docs/                            # Dokumentasi API.md, DATABASE.md, DEPLOYMENT.md
-│
-└── README.md                            # Panduan Project Bahasa Indonesia
-```
-
----
-
-## ⚡ Cara Menjalankan Project
-
-### 1. Menjalankan Server Frontend & Backend:
-```bash
-# Clone Repository
-git clone https://github.com/jefry195/absensi.git
-cd absensi
-
-# Menjalankan Backend Express (Port 5000)
-cd attendance-app/backend
-npm install
-npm start
-
-# Menjalankan Frontend React Vite (Port 1234)
-cd ../frontend
-npm install
-npm run dev
-```
-
-Akses aplikasi melalui browser: [http://localhost:1234](http://localhost:1234)
-
----
-
-## 🌐 Tautan Database & Live Deployment
+## 🌐 Tautan Live Deployment & Database
+- **Live Vercel Web App**: [https://absensi-alpha-navy.vercel.app](https://absensi-alpha-navy.vercel.app)
+- **GitHub Repository**: [https://github.com/jefry195/absensi](https://github.com/jefry195/absensi)
 - **Google Sheets Database**: [DB_Absensi_Karyawan](https://docs.google.com/spreadsheets/d/1cJM7tAYKsfeTv7owtIunLIKxmLpSGQ9qqmR18h_Omd4/edit?usp=sharing)
 - **Google Apps Script Execution Endpoint**: [GAS Web App](https://script.google.com/macros/s/AKfycbzOHaNtWI6vARI8aMnkoJh6oC06AzDR1sHDd21Q5R8VhqgG5f1soYnSNmIJHvXzjOM/exec)
+
+---
+
+## ⚡ Konfigurasi Vercel Deployment
+
+File `vercel.json` telah dikonfigurasi di root project dan sub-folder frontend untuk memastikan SPA Rewrite berjalan lancar tanpa error 404:
+
+```json
+{
+  "version": 2,
+  "name": "absensi-karyawan-face-recognition",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}
+```
 
 ---
 
