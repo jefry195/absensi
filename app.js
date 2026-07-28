@@ -1,7 +1,7 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
 // Integrated with Real Device Camera in PORTRAIT ORIENTATION (3:4 Ratio)
-// & Google Sheets Database Verification, Face Registration & Face Edit Profile
+// & Google Sheets Database Verification, Face Registration & Any User Face Edit
 // Bahasa Indonesia Version
 // ==========================================================================
 
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Application State
     const state = {
         currentUser: null,
+        editingTargetUser: null, // Tracks which user is being edited in modal
         currentScreen: 'login',
         isCameraActive: false,
         cameraStream: null,
@@ -38,12 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
         geofence: { lat: -6.2088, lng: 106.8456, radius: 100 },
         registeredEmployees: [], // Loaded live from Google Sheets Users tab (gid=0)
         employees: [
-            { id: 'EMP-8026', name: 'Alex Vance', role: 'Senior Software Architect', dept: 'Engineering', status: 'Hadir', time: '08:24:12 WIB', confidence: '99.8%', loc: 'Gedung HQ - Lt 4', lat: -6.2088, lng: 106.8456, avatar: 'assets/headshot_male.png', type: 'hq' },
-            { id: 'EMP-4102', name: 'Sophia Chen', role: 'UX Lead Designer', dept: 'Design', status: 'Hadir', time: '08:15:45 WIB', confidence: '99.4%', loc: 'Gedung HQ - Lt 3', lat: -6.2092, lng: 106.8450, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', type: 'hq' },
-            { id: 'EMP-5597', name: 'Marcus Brody', role: 'Spesialis Operasional Lapangan', dept: 'Logistics', status: 'Dinas Lapangan', time: '08:30:10 WIB', confidence: '98.9%', loc: 'Hub Wilayah Utara', lat: -6.1754, lng: 106.8272, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', type: 'field' },
-            { id: 'EMP-7410', name: 'Elena Rostova', role: 'Cloud Infrastructure Eng', dept: 'DevOps', status: 'Remote', time: '08:45:00 WIB', confidence: '99.1%', loc: 'Remote (Geofence Valid)', lat: -6.2250, lng: 106.8000, avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', type: 'remote' },
-            { id: 'EMP-9021', name: 'David Kim', role: 'QA Automation Engineer', dept: 'Engineering', status: 'Terlambat', time: '09:12:05 WIB', confidence: '97.6%', loc: 'Gedung HQ - Lt 4', lat: -6.2085, lng: 106.8460, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', type: 'hq' },
-            { id: 'EMP-3145', name: 'Amara Okafor', role: 'Client Relations Lead', dept: 'Sales', status: 'Dinas Lapangan', time: '08:50:33 WIB', confidence: '99.5%', loc: 'Situs Klien Barat', lat: -6.1900, lng: 106.7800, avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80', type: 'field' }
+            { id: 'EMP-8026', name: 'Alex Vance', nik: '3171008026', email: 'admin@lumina.ai', role: 'Senior Software Architect', dept: 'Engineering', status: 'Hadir', time: '08:24:12 WIB', confidence: '99.8%', loc: 'Gedung HQ - Lt 4', lat: -6.2088, lng: 106.8456, avatar: 'assets/headshot_male.png', type: 'hq' },
+            { id: 'EMP-4102', name: 'Sophia Chen', nik: '3171004102', email: 'karyawan@company.com', role: 'UX Lead Designer', dept: 'Design', status: 'Hadir', time: '08:15:45 WIB', confidence: '99.4%', loc: 'Gedung HQ - Lt 3', lat: -6.2092, lng: 106.8450, avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', type: 'hq' },
+            { id: 'EMP-5597', name: 'Marcus Brody', nik: '3171005597', email: 'marcus@company.com', role: 'Spesialis Lapangan', dept: 'Logistics', status: 'Dinas Lapangan', time: '08:30:10 WIB', confidence: '98.9%', loc: 'Hub Wilayah Utara', lat: -6.1754, lng: 106.8272, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', type: 'field' },
+            { id: 'EMP-7410', name: 'Elena Rostova', nik: '3171007410', email: 'elena@company.com', role: 'Cloud Engineer', dept: 'DevOps', status: 'Remote', time: '08:45:00 WIB', confidence: '99.1%', loc: 'Remote (Geofence Valid)', lat: -6.2250, lng: 106.8000, avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', type: 'remote' },
+            { id: 'EMP-9021', name: 'David Kim', nik: '3171009021', email: 'david@company.com', role: 'QA Automation', dept: 'Engineering', status: 'Terlambat', time: '09:12:05 WIB', confidence: '97.6%', loc: 'Gedung HQ - Lt 4', lat: -6.2085, lng: 106.8460, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', type: 'hq' },
+            { id: 'EMP-3145', name: 'Amara Okafor', nik: '3171003145', email: 'amara@company.com', role: 'Client Relations', dept: 'Sales', status: 'Dinas Lapangan', time: '08:50:33 WIB', confidence: '99.5%', loc: 'Situs Klien Barat', lat: -6.1900, lng: 106.7800, avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80', type: 'field' }
         ],
         records: []
     };
@@ -219,9 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnEditStartCam?.addEventListener('click', startEditCamera);
 
-    function openEditProfileModal() {
-        const user = state.currentUser || { name: 'Alex Vance', nik: '3171008026', email: 'admin@lumina.ai', dept: 'Engineering' };
-        
+    // OPEN EDIT MODAL FOR ANY TARGET USER (EMPLOYEE OR CURRENT LOGGED-IN USER)
+    function openEditProfileModalForUser(userToEdit) {
+        state.editingTargetUser = userToEdit || state.currentUser || state.employees[0];
+        const user = state.editingTargetUser;
+
         document.getElementById('edit-nama').value = user.name || '';
         document.getElementById('edit-nik').value = user.nik || '3171008026';
         document.getElementById('edit-email').value = user.email || '';
@@ -231,19 +234,20 @@ document.addEventListener('DOMContentLoaded', () => {
         startEditCamera();
     }
 
+    btnOpenEditProfile?.addEventListener('click', () => openEditProfileModalForUser(state.currentUser));
+    btnEditCurrentProfile?.addEventListener('click', () => openEditProfileModalForUser(state.currentUser));
+    btnCloseEditModal?.addEventListener('click', closeEditProfileModal);
+    btnEditCancel?.addEventListener('click', closeEditProfileModal);
+
     function closeEditProfileModal() {
         if (modalEditProfile) modalEditProfile.classList.add('hidden');
         stopEditCamera();
     }
 
-    btnOpenEditProfile?.addEventListener('click', openEditProfileModal);
-    btnEditCurrentProfile?.addEventListener('click', openEditProfileModal);
-    btnCloseEditModal?.addEventListener('click', closeEditProfileModal);
-    btnEditCancel?.addEventListener('click', closeEditProfileModal);
-
-    // FORM EDIT PROFILE SUBMIT
+    // FORM EDIT PROFILE SUBMIT FOR ANY USER
     formEditProfile?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const target = state.editingTargetUser || state.currentUser;
         const nama = document.getElementById('edit-nama')?.value.trim();
         const nik = document.getElementById('edit-nik')?.value.trim();
         const email = document.getElementById('edit-email')?.value.trim().toLowerCase();
@@ -251,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newFaceVector = Array.from({ length: 128 }, () => Math.random() * 2 - 1);
 
-        let newAvatarUrl = state.currentUser ? state.currentUser.avatar : 'assets/headshot_male.png';
+        let newAvatarUrl = target ? target.avatar : 'assets/headshot_male.png';
         if (editWebcamVideo && state.editCameraStream) {
             const canvas = document.createElement('canvas');
             canvas.width = 300; canvas.height = 400;
@@ -260,25 +264,25 @@ document.addEventListener('DOMContentLoaded', () => {
             newAvatarUrl = canvas.toDataURL('image/jpeg', 0.85);
         }
 
-        const updatedUser = {
-            ...state.currentUser,
-            name: nama,
-            nik: nik,
-            email: email,
-            dept: divisi,
-            avatar: newAvatarUrl
-        };
-
-        state.currentUser = updatedUser;
-        localStorage.setItem('lumina_session_user', JSON.stringify(updatedUser));
-        applyUserSession(updatedUser);
-
         // Update in employees list
-        const idx = state.employees.findIndex(emp => emp.id === updatedUser.id || emp.email === updatedUser.email);
+        const idx = state.employees.findIndex(emp => emp.id === target.id || emp.email === target.email);
         if (idx !== -1) {
             state.employees[idx].name = nama;
+            state.employees[idx].nik = nik;
+            state.employees[idx].email = email;
             state.employees[idx].dept = divisi;
             state.employees[idx].avatar = newAvatarUrl;
+        }
+
+        // If editing currently logged in user
+        if (state.currentUser && (state.currentUser.email === target.email || state.currentUser.id === target.id)) {
+            state.currentUser.name = nama;
+            state.currentUser.nik = nik;
+            state.currentUser.email = email;
+            state.currentUser.dept = divisi;
+            state.currentUser.avatar = newAvatarUrl;
+            localStorage.setItem('lumina_session_user', JSON.stringify(state.currentUser));
+            applyUserSession(state.currentUser);
         }
 
         renderDashboardTable();
@@ -286,13 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRosterGrid();
 
         await submitToAppsScript({
-            action: 'register', // Appends or updates user in Sheets
+            action: 'register',
             nama: nama,
             nik: nik,
             email: email,
             faceEmbedding: newFaceVector,
             divisi: divisi,
-            role: updatedUser.role || 'karyawan'
+            role: target.role || 'karyawan'
         });
 
         closeEditProfileModal();
@@ -304,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="text-align:center;">
                     <img src="${newAvatarUrl}" style="width:90px; height:120px; border-radius:12px; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
                     <h3 style="color:#00f2fe;">${nama}</h3>
-                    <p style="color:#9ca3af; font-size:12px;">Sampel Vektor Wajah Baru Berhasil Disimpan ke Google Sheets Database!</p>
+                    <p style="color:#9ca3af; font-size:12px;">Sampel Vektor Wajah Karyawan Berhasil Disimpan ke Google Sheets Database!</p>
                 </div>
             `,
             background: '#0f1422',
@@ -771,8 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             fetchedEmps.push({
                                 id: cols[0] || `EMP-100${i}`,
                                 name: cols[1] || `Karyawan ${i}`,
-                                nik: cols[2] || '',
-                                email: cols[3] || '',
+                                nik: cols[2] || `317100100${i}`,
+                                email: cols[3] || `karyawan${i}@company.com`,
                                 faceEmbedding: cols[5] || '',
                                 dept: cols[6] || 'Engineering',
                                 role: cols[7] || 'Anggota Tim',
@@ -919,9 +923,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="badge ${getStatusBadgeClass(emp.status)}">${emp.status}</span>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-secondary btn-inspect" data-emp-id="${emp.id}">
-                        Inspeksi
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button class="btn btn-sm btn-secondary btn-inspect" data-emp-id="${emp.id}">
+                            Inspeksi
+                        </button>
+                        <button class="btn btn-sm btn-outline text-cyan btn-edit-user-face" data-emp-id="${emp.id}">
+                            Edit Wajah
+                        </button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -930,6 +939,14 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', (e) => {
                 const empId = e.currentTarget.dataset.empId;
                 openAuditModal(empId);
+            });
+        });
+
+        document.querySelectorAll('.btn-edit-user-face').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const empId = e.currentTarget.dataset.empId;
+                const empToEdit = state.employees.find(item => item.id === empId);
+                openEditProfileModalForUser(empToEdit);
             });
         });
     }
@@ -965,10 +982,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><span class="text-muted">${r.location}</span></td>
                 <td><span class="badge ${getStatusBadgeClass(r.status)}">${r.status}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-secondary" onclick="alert('Melihat log audit untuk ${r.recordId}')">Log Audit</button>
+                    <div class="flex items-center gap-1">
+                        <button class="btn btn-sm btn-secondary" onclick="alert('Melihat log audit untuk ${r.recordId}')">Audit</button>
+                        <button class="btn btn-sm btn-outline text-cyan btn-record-edit-face" data-emp-id="${r.empId}">Edit Wajah</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
+
+        document.querySelectorAll('.btn-record-edit-face').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const empId = e.currentTarget.dataset.empId;
+                const empToEdit = state.employees.find(item => item.id === empId);
+                openEditProfileModalForUser(empToEdit);
+            });
+        });
     }
 
     document.getElementById('record-search-input')?.addEventListener('input', renderRecordsTable);
@@ -992,8 +1020,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-muted">Akurasi:</span> <span class="font-mono text-cyan">${emp.confidence}</span>
                     </div>
                 </div>
+                <button class="btn btn-sm btn-outline text-cyan border-cyan/40 mt-3 btn-roster-edit-face" data-emp-id="${emp.id}" style="width:100%;">
+                    <i data-lucide="camera"></i> Edit Profil & Wajah User
+                </button>
             </div>
         `).join('');
+
+        document.querySelectorAll('.btn-roster-edit-face').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const empId = e.currentTarget.dataset.empId;
+                const empToEdit = state.employees.find(item => item.id === empId);
+                openEditProfileModalForUser(empToEdit);
+            });
+        });
     }
 
     function getStatusBadgeClass(status) {
