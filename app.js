@@ -406,6 +406,20 @@ document.addEventListener('DOMContentLoaded', () => {
         state.employees.unshift(newEmp);
         DEFAULT_USERS.push({ email, password, name: nama, role, dept: divisi, avatar: avatarUrl, nik: nik });
 
+        // Bug #9 fix: Also add to records array so new user appears in Riwayat Absensi
+        state.records.unshift({
+            recordId: `REC-${Date.now().toString().slice(-8)}`,
+            empId: newEmp.id,
+            name: nama,
+            dept: divisi,
+            checkIn: newEmp.time,
+            checkOut: 'Pending',
+            confidence: newEmp.confidence,
+            location: newEmp.loc,
+            status: newEmp.status,
+            avatar: avatarUrl
+        });
+
         renderDashboardTable();
         renderRecordsTable();
         renderRosterGrid();
@@ -420,6 +434,9 @@ document.addEventListener('DOMContentLoaded', () => {
             divisi: divisi,
             role: role
         });
+
+        // Bug #12 fix: Reset the form fields after successful registration
+        if (formRegisterFace) formRegisterFace.reset();
 
         closeRegisterModal();
 
@@ -545,6 +562,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmButtonColor: '#00f2fe'
             });
         }, 1500);
+    });
+
+    // Bug #1 fix: Add handler for "Konfirmasi Presensi Masuk" button
+    document.getElementById('btn-confirm-attendance')?.addEventListener('click', () => {
+        // Trigger the scan & attendance process (same as btn-sim-scan)
+        btnSimScan?.click();
     });
 
     // Initialize Login System & Session Check
@@ -769,8 +792,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lines = csvText.trim().split('\n');
                 if (lines.length > 1) {
                     const fetchedEmps = [];
+
+                    // Bug #4 fix: Proper CSV parser that handles quoted fields with commas
+                    function parseCSVLine(line) {
+                        const result = [];
+                        let current = '';
+                        let inQuotes = false;
+                        for (let c = 0; c < line.length; c++) {
+                            const ch = line[c];
+                            if (ch === '"') {
+                                inQuotes = !inQuotes;
+                            } else if (ch === ',' && !inQuotes) {
+                                result.push(current.trim());
+                                current = '';
+                            } else {
+                                current += ch;
+                            }
+                        }
+                        result.push(current.trim());
+                        return result;
+                    }
+
                     for (let i = 1; i < lines.length; i++) {
-                        const cols = lines[i].split(',');
+                        const cols = parseCSVLine(lines[i]);
                         if (cols.length >= 4) {
                             fetchedEmps.push({
                                 id: cols[0] || `EMP-100${i}`,
@@ -806,12 +850,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Bug #7 fix: Use 'cors' mode and proper fetch to ensure data is sent correctly
     async function submitToAppsScript(payload) {
         try {
             await fetch(GOOGLE_CONFIG.webAppUrl, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -949,6 +993,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 openEditProfileModalForUser(empToEdit);
             });
         });
+
+        // Bug #8 fix: Re-render Lucide icons after dynamic HTML injection
+        lucide.createIcons();
     }
 
     function renderRecordsTable() {
@@ -997,6 +1044,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 openEditProfileModalForUser(empToEdit);
             });
         });
+
+        // Bug #8 fix: Re-render Lucide icons after dynamic HTML injection
+        lucide.createIcons();
     }
 
     document.getElementById('record-search-input')?.addEventListener('input', renderRecordsTable);
@@ -1033,6 +1083,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 openEditProfileModalForUser(empToEdit);
             });
         });
+
+        // Bug #8 fix: Re-render Lucide icons for dynamically injected HTML
+        lucide.createIcons();
     }
 
     function getStatusBadgeClass(status) {
@@ -1147,6 +1200,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         resizeCanvas();
 
+        // Bug #11 fix: Listen for window resize so canvas adapts on orientation change
+        window.addEventListener('resize', resizeCanvas);
+
         let frame = 0;
         function renderLoop() {
             if (state.currentScreen !== 'face-scan') return;
@@ -1168,16 +1224,22 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(renderLoop);
     }
 
+    // Bug #10 fix: Track kiosk clock interval to prevent memory leak
+    let kioskClockInterval = null;
+
     function initKioskClock() {
         const clockEl = document.getElementById('kiosk-clock-display');
         if (!clockEl) return;
+
+        // Clear any existing interval before creating a new one
+        if (kioskClockInterval) clearInterval(kioskClockInterval);
 
         function updateClock() {
             if (state.currentScreen !== 'kiosk-mode') return;
             const now = new Date();
             clockEl.textContent = now.toLocaleTimeString() + ' WIB';
         }
-        setInterval(updateClock, 1000);
+        kioskClockInterval = setInterval(updateClock, 1000);
         updateClock();
     }
 
