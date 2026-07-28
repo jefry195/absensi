@@ -1,6 +1,6 @@
 /* ==========================================================================
    FaceTrack AI Attendance System - Design System & Responsive Styles
-   Lumina Attendance - Portrait Camera & Full Mobile Responsiveness Refinement
+   Lumina Attendance - Smartphone Modal Pop-Up Full Responsiveness
    ========================================================================== */
 
 :root {
@@ -303,26 +303,6 @@ body.dark-theme {
     gap: 12px;
 }
 
-.search-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--bg-surface);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    padding: 8px 14px;
-    width: 260px;
-    transition: var(--transition);
-}
-
-.search-bar input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-main);
-    width: 100%;
-}
-
 /* Buttons & Badges */
 .btn {
     display: inline-flex;
@@ -608,14 +588,6 @@ body.dark-theme {
     box-shadow: 0 0 12px var(--primary-cyan-glow);
 }
 
-.login-footer {
-    text-align: center;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--glass-border);
-    font-size: 11px;
-}
-
 /* Dashboard Metrics Grid */
 .metrics-grid {
     display: grid;
@@ -768,13 +740,13 @@ body.dark-theme {
     font-family: var(--font-mono);
 }
 
-/* PORTRAIT CAMERA VIEWPORT FOR SCANNER & POP-UP MODALS (3:4 PORTRAIT RATIO) */
+/* PORTRAIT CAMERA VIEWPORT (3:4 PORTRAIT RATIO) */
 .video-viewport {
     position: relative;
     width: 100%;
     max-width: 380px;
     margin: 0 auto;
-    aspect-ratio: 3 / 4; /* Portrait Camera Ratio */
+    aspect-ratio: 3 / 4;
     background: #000;
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -794,10 +766,10 @@ body.dark-theme {
 .mini-cam-preview {
     position: relative;
     width: 100%;
-    max-width: 240px;
+    max-width: 220px !important;
     margin: 0 auto;
-    aspect-ratio: 3 / 4 !important; /* STRICT PORTRAIT MODAL CAMERA */
-    height: 280px !important;
+    aspect-ratio: 3 / 4 !important;
+    height: 260px !important;
     border-radius: var(--radius-md);
     overflow: hidden;
     border: 2px solid var(--primary-cyan);
@@ -1281,30 +1253,33 @@ body.dark-theme {
     font-size: 11px;
 }
 
-/* Modal Styling */
+/* FULLY RESPONSIVE MODAL POP-UP STYLING */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(8px);
     z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 12px;
     overflow-y: auto;
 }
 
 .modal-overlay.hidden {
-    display: none;
+    display: none !important;
 }
 
 .modal-content {
-    width: 540px;
+    width: 580px;
     max-width: 100%;
     border-color: var(--primary-cyan);
-    max-height: 90vh;
+    max-height: 92vh;
     overflow-y: auto;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 40px rgba(0, 242, 254, 0.25);
+    background: #0f1422;
 }
 
 .modal-header {
@@ -1313,6 +1288,18 @@ body.dark-theme {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    background: #0f1422;
+    z-index: 10;
+}
+
+.modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .modal-close {
@@ -1320,6 +1307,7 @@ body.dark-theme {
     border: none;
     color: var(--text-muted);
     cursor: pointer;
+    font-size: 18px;
 }
 
 .modal-body {
@@ -1331,6 +1319,11 @@ body.dark-theme {
     border-top: 1px solid var(--glass-border);
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    background: #0f1422;
+    z-index: 10;
 }
 
 /* Utility Helpers */
@@ -1372,9 +1365,46 @@ body.dark-theme {
         aspect-ratio: 3 / 4;
     }
     
+    /* SMARTPHONE RESPONSIVE MODAL POP-UP (REGISTRATION & EDIT PROFILE) */
+    .modal-overlay {
+        padding: 8px;
+        align-items: flex-start;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: 96vw !important;
+        margin: 10px auto;
+        border-radius: var(--radius-md);
+        max-height: 94vh;
+    }
+
+    .modal-header {
+        padding: 12px 14px;
+    }
+
+    .modal-header h3 {
+        font-size: 14px;
+    }
+
+    .modal-body {
+        padding: 14px 12px;
+    }
+
+    .modal-footer {
+        padding: 10px 12px;
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .modal-footer .btn {
+        width: 100% !important;
+    }
+
     .mini-cam-preview {
         max-width: 100% !important;
-        height: 260px !important;
+        width: 200px !important;
+        height: 250px !important;
         aspect-ratio: 3 / 4 !important;
     }
 
@@ -1400,7 +1430,8 @@ body.dark-theme {
     }
     
     .mini-cam-preview {
-        height: 240px !important;
+        width: 180px !important;
+        height: 230px !important;
     }
 
     .reticle-box {
