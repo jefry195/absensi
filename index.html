@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lumina FaceTrack AI - Sistem Absensi Karyawan</title>
 
     <!-- Google Fonts -->
@@ -26,9 +26,12 @@
 </head>
 <body class="dark-theme">
     <div class="app-container">
+        <!-- Sidebar Backdrop for Mobile -->
+        <div class="sidebar-backdrop hidden" id="sidebar-backdrop"></div>
+
         <!-- Sidebar Navigation (Hidden when in Login screen) -->
         <aside class="sidebar hidden" id="main-sidebar">
-            <div class="sidebar-header">
+            <div class="sidebar-header flex justify-between items-center">
                 <div class="logo-box">
                     <img src="assets/logo.png" alt="Lumina Logo" class="logo-img">
                     <div class="brand-text">
@@ -36,6 +39,12 @@
                         <span class="brand-subtitle">FaceTrack AI</span>
                     </div>
                 </div>
+                <button class="mobile-close-btn hidden" id="mobile-sidebar-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="px-4 py-2">
                 <div class="system-status">
                     <span class="status-dot online"></span>
                     <span class="status-text">AI Core Aktif</span>
@@ -78,7 +87,7 @@
 
             <div class="sidebar-footer">
                 <div class="user-pill flex items-center justify-between">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 overflow-hidden">
                         <img src="assets/headshot_male.png" alt="User Avatar" class="user-avatar" id="sidebar-user-avatar">
                         <div class="user-info">
                             <span class="user-name" id="sidebar-user-name">Alex Vance</span>
@@ -96,14 +105,19 @@
         <main class="main-content" id="main-content-area" style="margin-left: 0;">
             <!-- Top Navbar (Hidden when in Login screen) -->
             <header class="topbar hidden" id="main-topbar">
-                <div class="page-title-box">
-                    <h1 id="page-title">Dashboard Admin</h1>
-                    <p id="page-subtitle" class="text-muted">Metrik presensi biometrik real-time & monitoring kecerdasan buatan</p>
+                <div class="topbar-left flex items-center gap-3">
+                    <button class="btn btn-secondary btn-icon mobile-hamburger-btn" id="mobile-menu-toggle" title="Menu Navbar">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div class="page-title-box">
+                        <h1 id="page-title">Dashboard Admin</h1>
+                        <p id="page-subtitle" class="text-muted hidden-mobile">Metrik presensi biometrik real-time & monitoring AI</p>
+                    </div>
                 </div>
                 <div class="topbar-actions">
-                    <div class="search-bar">
+                    <div class="search-bar hidden-mobile">
                         <i data-lucide="search"></i>
-                        <input type="text" placeholder="Cari karyawan, NIK, riwayat..." id="global-search">
+                        <input type="text" placeholder="Cari karyawan, NIK..." id="global-search">
                     </div>
                     <button class="btn btn-secondary btn-icon" id="btn-notifications" title="Notifikasi">
                         <i data-lucide="bell"></i>
@@ -111,7 +125,7 @@
                     </button>
                     <button class="btn btn-primary" id="btn-quick-scan">
                         <i data-lucide="camera"></i>
-                        <span>Scan Wajah Cepat</span>
+                        <span class="hidden-mobile">Scan Wajah</span>
                     </button>
                 </div>
             </header>
@@ -172,7 +186,7 @@
                                 <span class="metric-number" id="val-present">142</span>
                                 <span class="metric-change positive"><i data-lucide="trending-up"></i> +94.2%</span>
                             </div>
-                            <span class="metric-detail">Dari total 150 karyawan</span>
+                            <span class="metric-detail">Dari 150 karyawan</span>
                         </div>
                     </div>
 
@@ -181,12 +195,12 @@
                             <i data-lucide="clock"></i>
                         </div>
                         <div class="metric-content">
-                            <span class="metric-label">Kehadiran Tepat Waktu</span>
+                            <span class="metric-label">Tepat Waktu</span>
                             <div class="metric-value-group">
                                 <span class="metric-number">91.8%</span>
                                 <span class="metric-change positive"><i data-lucide="trending-up"></i> +2.4%</span>
                             </div>
-                            <span class="metric-detail">Rata-rata masuk: 08:24 WIB</span>
+                            <span class="metric-detail">Masuk: 08:24 WIB</span>
                         </div>
                     </div>
 
@@ -195,12 +209,12 @@
                             <i data-lucide="alert-triangle"></i>
                         </div>
                         <div class="metric-content">
-                            <span class="metric-label">Terlambat / Diperiksa</span>
+                            <span class="metric-label">Terlambat</span>
                             <div class="metric-value-group">
                                 <span class="metric-number" id="val-late">8</span>
                                 <span class="metric-change negative"><i data-lucide="trending-down"></i> -1</span>
                             </div>
-                            <span class="metric-detail">Perlu peninjauan supervisor</span>
+                            <span class="metric-detail">Perlu peninjauan</span>
                         </div>
                     </div>
 
@@ -209,12 +223,12 @@
                             <i data-lucide="navigation"></i>
                         </div>
                         <div class="metric-content">
-                            <span class="metric-label">Verifikasi GPS Lapangan</span>
+                            <span class="metric-label">GPS Lapangan</span>
                             <div class="metric-value-group">
                                 <span class="metric-number">34</span>
-                                <span class="metric-change neutral"><i data-lucide="map-pin"></i> 100% Valid</span>
+                                <span class="metric-change neutral"><i data-lucide="map-pin"></i> Valid</span>
                             </div>
-                            <span class="metric-detail">Sesuai radius geofence</span>
+                            <span class="metric-detail">Radius geofence</span>
                         </div>
                     </div>
                 </div>
@@ -223,10 +237,9 @@
                     <!-- Left Column: Attendance Trends & Face AI Metrics -->
                     <div class="dashboard-main-col">
                         <div class="card glassmorphism">
-                            <div class="card-header">
+                            <div class="card-header flex-wrap gap-2">
                                 <div class="card-title-group">
-                                    <h3>Grafik Kehadiran Mingguan & Kecepatan Scan AI</h3>
-                                    <span class="text-muted">Throughput presensi per jam & pengenalan wajah Face ID</span>
+                                    <h3>Grafik Kehadiran & AI Scan</h3>
                                 </div>
                                 <div class="card-actions">
                                     <button class="btn btn-sm btn-outline active">Hari Ini</button>
@@ -251,9 +264,9 @@
                                         <thead>
                                             <tr>
                                                 <th>Karyawan</th>
-                                                <th>Skor Kemiripan AI</th>
-                                                <th>Waktu & Mode</th>
-                                                <th>Geofence GPS</th>
+                                                <th>Skor AI</th>
+                                                <th>Waktu</th>
+                                                <th>Geofence</th>
                                                 <th>Status</th>
                                                 <th>Aksi</th>
                                             </tr>
@@ -271,8 +284,8 @@
                     <div class="dashboard-side-col">
                         <div class="card glassmorphism">
                             <div class="card-header">
-                                <h3>Kamera Presensi Real-Time</h3>
-                                <span class="badge badge-success"><span class="pulse-dot"></span> Feed AI Aktif</span>
+                                <h3>Kamera Real-Time</h3>
+                                <span class="badge badge-success"><span class="pulse-dot"></span> AI Live</span>
                             </div>
                             <div class="card-body">
                                 <div class="mini-cam-preview">
@@ -288,7 +301,7 @@
                                 <div class="scanner-mini-info">
                                     <div class="info-row">
                                         <span class="text-muted">Terakhir Discan:</span>
-                                        <span class="font-mono text-cyan">Alex Vance (EMP-8026)</span>
+                                        <span class="font-mono text-cyan">Alex Vance</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="text-muted">Verifikasi:</span>
@@ -317,17 +330,17 @@
                 <div class="face-scan-wrapper">
                     <div class="face-scan-main">
                         <div class="cam-container glassmorphism">
-                            <div class="cam-header">
+                            <div class="cam-header flex-wrap gap-2">
                                 <div class="cam-status">
                                     <span class="status-dot active"></span>
-                                    <span>Kamera AI #01 - Gate Utama Utara</span>
+                                    <span>Kamera AI #01 - Gate Utama</span>
                                 </div>
-                                <div class="cam-controls">
+                                <div class="cam-controls flex-wrap gap-2">
                                     <button class="btn btn-sm btn-secondary" id="btn-toggle-camera">
-                                        <i data-lucide="video"></i> Ganti Sumber Kamera
+                                        <i data-lucide="video"></i> Kamera
                                     </button>
                                     <button class="btn btn-sm btn-secondary" id="btn-sim-scan">
-                                        <i data-lucide="zap"></i> Jalankan Presensi Wajah
+                                        <i data-lucide="zap"></i> Presensi Wajah
                                     </button>
                                 </div>
                             </div>
@@ -442,12 +455,12 @@
             <!-- Screen 6: Dedicated Kiosk Mode View -->
             <section id="screen-kiosk-mode" class="screen-view">
                 <div class="kiosk-container">
-                    <div class="kiosk-header">
+                    <div class="kiosk-header flex-wrap gap-2">
                         <div class="kiosk-brand">
                             <img src="assets/logo.png" alt="Logo" class="kiosk-logo">
                             <div>
                                 <span class="kiosk-title">Portal Kiosk Lumina Gate</span>
-                                <span class="kiosk-sub">Sistem Presensi Wajah Otomatis Berbasis AI</span>
+                                <span class="kiosk-sub">Sistem Presensi Wajah Otomatis</span>
                             </div>
                         </div>
                         <div class="kiosk-clock font-mono" id="kiosk-clock-display">
@@ -455,11 +468,11 @@
                         </div>
                     </div>
 
-                    <div class="kiosk-body">
+                    <div class="kiosk-body my-4">
                         <div class="kiosk-camera-frame glassmorphism">
                             <div class="kiosk-target-reticle">
                                 <div class="reticle-pulse"></div>
-                                <p class="reticle-instruction">POSISIKAN WAJAH ANDA DI SINI UNTUK PRESENSI INSTAN</p>
+                                <p class="reticle-instruction">POSISIKAN WAJAH DI SINI UNTUK PRESENSI INSTAN</p>
                             </div>
                             <div class="kiosk-banner hidden" id="kiosk-welcome-banner">
                                 <i data-lucide="check-circle" class="kiosk-success-icon"></i>
@@ -477,15 +490,14 @@
             <section id="screen-live-map" class="screen-view">
                 <div class="map-layout-grid">
                     <div class="map-wrapper glassmorphism">
-                        <div class="map-controls-bar">
-                            <div class="filter-group">
-                                <button class="btn btn-sm btn-outline active" data-map-filter="all">Semua Karyawan (150)</button>
-                                <button class="btn btn-sm btn-outline" data-map-filter="hq">Kantor HQ (98)</button>
-                                <button class="btn btn-sm btn-outline" data-map-filter="field">Tim Lapangan (34)</button>
-                                <button class="btn btn-sm btn-outline" data-map-filter="remote">Remote (18)</button>
+                        <div class="map-controls-bar flex-wrap gap-2">
+                            <div class="filter-group flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline active" data-map-filter="all">Semua (150)</button>
+                                <button class="btn btn-sm btn-outline" data-map-filter="hq">HQ (98)</button>
+                                <button class="btn btn-sm btn-outline" data-map-filter="field">Lapangan (34)</button>
                             </div>
                             <div class="map-status-info">
-                                <span class="status-dot active"></span> Telemetri GPS Aktif
+                                <span class="status-dot active"></span> Telemetri GPS
                             </div>
                         </div>
                         <div id="leaflet-map-container" class="map-container"></div>
@@ -493,7 +505,7 @@
 
                     <div class="map-side-panel glassmorphism">
                         <div class="card-header">
-                            <h3>Daftar GPS Karyawan Lapangan</h3>
+                            <h3>GPS Lapangan</h3>
                             <span class="text-muted" id="map-active-count">34 Online</span>
                         </div>
                         <div class="card-body padding-none">
@@ -512,7 +524,7 @@
                         <div class="filter-bar flex-wrap gap-2">
                             <div class="input-with-icon">
                                 <i data-lucide="search"></i>
-                                <input type="text" id="record-search-input" placeholder="Cari nama, NIK, divisi...">
+                                <input type="text" id="record-search-input" placeholder="Cari nama, NIK...">
                             </div>
                             <select id="record-status-filter" class="form-select">
                                 <option value="all">Semua Status</option>
@@ -521,14 +533,10 @@
                                 <option value="On Field">Dinas Lapangan</option>
                                 <option value="Remote">Remote</option>
                             </select>
-                            <input type="date" id="record-date-filter" class="form-input">
                         </div>
-                        <div class="records-actions">
+                        <div class="records-actions flex-wrap gap-2">
                             <button class="btn btn-secondary" id="btn-export-csv">
                                 <i data-lucide="download"></i> Ekspor CSV
-                            </button>
-                            <button class="btn btn-primary" id="btn-add-record">
-                                <i data-lucide="plus"></i> Input Manual
                             </button>
                         </div>
                     </div>
@@ -541,8 +549,7 @@
                                         <th>Karyawan</th>
                                         <th>Divisi</th>
                                         <th>Waktu Masuk</th>
-                                        <th>Waktu Keluar</th>
-                                        <th>Skor Wajah AI</th>
+                                        <th>Skor AI</th>
                                         <th>Lokasi GPS</th>
                                         <th>Status</th>
                                         <th>Aksi</th>
@@ -583,18 +590,6 @@
                             <div class="color-swatch-card" style="background: #00f2fe; color: #000;">
                                 <span class="swatch-name">Cyan Neon Utama</span>
                                 <span class="swatch-code">#00f2fe</span>
-                            </div>
-                            <div class="color-swatch-card" style="background: #7928ca;">
-                                <span class="swatch-name">Electric Purple Accent</span>
-                                <span class="swatch-code">#7928ca</span>
-                            </div>
-                            <div class="color-swatch-card" style="background: #10b981;">
-                                <span class="swatch-name">Emerald Success</span>
-                                <span class="swatch-code">#10b981</span>
-                            </div>
-                            <div class="color-swatch-card" style="background: #f59e0b;">
-                                <span class="swatch-name">Amber Warning</span>
-                                <span class="swatch-code">#f59e0b</span>
                             </div>
                         </div>
                     </div>

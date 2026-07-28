@@ -1,7 +1,7 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
 // Integrated with Google Sheets DB & Google Apps Script Backend
-// Interactive Login System & Session Management
+// Interactive Login System, Mobile Drawer & Session Management
 // Bahasa Indonesia Version
 // ==========================================================================
 
@@ -69,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainSidebar = document.getElementById('main-sidebar');
     const mainTopbar = document.getElementById('main-topbar');
     const mainContentArea = document.getElementById('main-content-area');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
     const pageTitle = document.getElementById('page-title');
     const pageSubtitle = document.getElementById('page-subtitle');
     const sidebarUserName = document.getElementById('sidebar-user-name');
@@ -86,6 +89,21 @@ document.addEventListener('DOMContentLoaded', () => {
         'roster': { title: 'Roster Karyawan & Profil Biometrik', sub: 'Direktori karyawan terdaftar dan vektor jaringan saraf' },
         'design-system': { title: 'Sistem Desain Lumina', sub: 'Token mode gelap, komponen UI glassmorphic & panduan gaya' }
     };
+
+    // Mobile Hamburger Menu Handlers
+    function openMobileSidebar() {
+        if (mainSidebar) mainSidebar.classList.add('mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('hidden');
+    }
+
+    function closeMobileSidebar() {
+        if (mainSidebar) mainSidebar.classList.remove('mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+    }
+
+    mobileMenuToggle?.addEventListener('click', openMobileSidebar);
+    mobileSidebarClose?.addEventListener('click', closeMobileSidebar);
+    sidebarBackdrop?.addEventListener('click', closeMobileSidebar);
 
     // Initialize Login System & Session Check
     function checkSession() {
@@ -109,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mainSidebar) mainSidebar.classList.add('hidden');
         if (mainTopbar) mainTopbar.classList.add('hidden');
         if (mainContentArea) mainContentArea.style.marginLeft = '0';
+        closeMobileSidebar();
 
         screenViews.forEach(view => {
             if (view.id === 'screen-login') {
@@ -122,7 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyUserSession(user) {
         if (mainSidebar) mainSidebar.classList.remove('hidden');
         if (mainTopbar) mainTopbar.classList.remove('hidden');
-        if (mainContentArea) mainContentArea.style.marginLeft = '260px';
+        
+        // Responsive margin set in CSS media queries for mobile
+        if (window.innerWidth > 768) {
+            if (mainContentArea) mainContentArea.style.marginLeft = '260px';
+        } else {
+            if (mainContentArea) mainContentArea.style.marginLeft = '0';
+        }
 
         if (sidebarUserName) sidebarUserName.textContent = user.name || 'User';
         if (sidebarUserRole) sidebarUserRole.textContent = user.role === 'admin' ? 'Administrator Sistem' : 'Karyawan Aktif';
@@ -248,6 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pageTitle.textContent = titlesMap[targetScreenId].title;
             pageSubtitle.textContent = titlesMap[targetScreenId].sub;
         }
+
+        closeMobileSidebar();
 
         if (targetScreenId === 'live-map') {
             setTimeout(initLeafletMap, 100);
@@ -488,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td>${r.dept}</td>
                 <td class="font-mono text-cyan">${r.checkIn}</td>
-                <td class="font-mono text-muted">${r.checkOut}</td>
                 <td><span class="badge badge-cyan">${r.confidence}</span></td>
                 <td><span class="text-muted">${r.location}</span></td>
                 <td><span class="badge ${getStatusBadgeClass(r.status)}">${r.status}</span></td>
