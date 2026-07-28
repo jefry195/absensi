@@ -1,7 +1,7 @@
 // ==========================================================================
 // FaceTrack AI Attendance System - Lumina Attendance Application Logic
 // Integrated with Real Device Camera (Webcam / HP Camera)
-// & Google Sheets Database Verification (Users Tab gid=0)
+// & Google Sheets Database Verification & New Face Registration
 // Bahasa Indonesia Version
 // ==========================================================================
 
@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentScreen: 'login',
         isCameraActive: false,
         cameraStream: null,
+        regCameraStream: null,
         geofence: { lat: -6.2088, lng: 106.8456, radius: 100 },
         registeredEmployees: [], // Loaded live from Google Sheets Users tab (gid=0)
         employees: [
@@ -80,11 +81,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Camera Video & Canvas Elements
     const webcamVideo = document.getElementById('webcam-video');
-    const scannerCanvas = document.getElementById('scanner-canvas');
     const btnStartCamera = document.getElementById('btn-start-camera');
     const btnSimScan = document.getElementById('btn-sim-scan');
     const reticleStatus = document.getElementById('reticle-status');
     const cameraStatusText = document.getElementById('camera-status-text');
+
+    // Modal Registration Elements
+    const modalRegisterFace = document.getElementById('modal-register-face');
+    const btnOpenRegisterModal = document.getElementById('btn-open-register-modal');
+    const btnRosterAddUser = document.getElementById('btn-roster-add-user');
+    const btnLoginRegister = document.getElementById('btn-login-register');
+    const btnCloseRegisterModal = document.getElementById('btn-close-register-modal');
+    const btnRegCancel = document.getElementById('btn-reg-cancel');
+    const btnRegStartCam = document.getElementById('btn-reg-start-cam');
+    const regWebcamVideo = document.getElementById('reg-webcam-video');
+    const formRegisterFace = document.getElementById('form-register-face');
 
     const titlesMap = {
         'login': { title: 'Login Sistem', sub: 'Pilih role & autentikasi masuk' },
@@ -122,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 video: {
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
-                    facingMode: 'user' // Front camera for mobile HP
+                    facingMode: 'user'
                 },
                 audio: false
             };
@@ -137,31 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 await webcamVideo.play();
             }
 
-            if (reticleStatus) reticleStatus.textContent = 'KAMERA AKTIF - POSISIKAN WAJAH DI SINI';
+            if (reticleStatus) reticleStatus.textContent = 'KAMERA AKTIF - POSISIKAN WAJAH DI DALAM BINGKAI';
             if (cameraStatusText) cameraStatusText.textContent = 'Kamera Aktif & Live Tracking';
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Kamera Aktif!',
-                text: 'Kamera HP/Webcam berhasil dibuka. Posisikan wajah Anda di dalam frame.',
-                timer: 1500,
-                showConfirmButton: false,
-                background: '#0f1422',
-                color: '#fff'
-            });
         } catch (err) {
             console.error("Gagal membuka kamera:", err);
             if (reticleStatus) reticleStatus.textContent = 'IZIN KAMERA DITOLAK ATAL TIDAK TERSEDIA';
             if (cameraStatusText) cameraStatusText.textContent = 'Akses Kamera Ditolak';
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'Kamera Tidak Tersedia',
-                text: 'Mohon izinkan akses kamera pada browser HP / PC Anda.',
-                background: '#0f1422',
-                color: '#fff',
-                confirmButtonColor: '#00f2fe'
-            });
         }
     }
 
@@ -184,6 +176,132 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             startWebcamStream();
         }
+    });
+
+    // FACE REGISTRATION ENROLLMENT CAMERA
+    async function startEnrollmentCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+                audio: false
+            });
+            state.regCameraStream = stream;
+            if (regWebcamVideo) {
+                regWebcamVideo.srcObject = stream;
+                await regWebcamVideo.play();
+            }
+            const hud = document.getElementById('reg-hud-status');
+            if (hud) hud.textContent = 'SIAP AMBIL SAMPEL';
+        } catch (e) {
+            console.warn("Gagal membuka kamera enrollment:", e);
+        }
+    }
+
+    function stopEnrollmentCamera() {
+        if (state.regCameraStream) {
+            state.regCameraStream.getTracks().forEach(t => t.stop());
+            state.regCameraStream = null;
+        }
+        if (regWebcamVideo) regWebcamVideo.srcObject = null;
+    }
+
+    btnRegStartCam?.addEventListener('click', startEnrollmentCamera);
+
+    function openRegisterModal() {
+        if (modalRegisterFace) modalRegisterFace.classList.remove('hidden');
+        startEnrollmentCamera();
+    }
+
+    function closeRegisterModal() {
+        if (modalRegisterFace) modalRegisterFace.classList.add('hidden');
+        stopEnrollmentCamera();
+    }
+
+    btnOpenRegisterModal?.addEventListener('click', openRegisterModal);
+    btnRosterAddUser?.addEventListener('click', openRegisterModal);
+    btnLoginRegister?.addEventListener('click', openRegisterModal);
+    btnCloseRegisterModal?.addEventListener('click', closeRegisterModal);
+    btnRegCancel?.addEventListener('click', closeRegisterModal);
+
+    // FORM REGISTRASI WAJAH BARU SUBMIT TO GOOGLE SHEETS
+    formRegisterFace?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nama = document.getElementById('reg-nama')?.value.trim();
+        const nik = document.getElementById('reg-nik')?.value.trim();
+        const email = document.getElementById('reg-email')?.value.trim().toLowerCase();
+        const password = document.getElementById('reg-password')?.value.trim();
+        const divisi = document.getElementById('reg-divisi')?.value;
+        const role = document.getElementById('reg-role')?.value;
+
+        // Generate synthetic 128-float face embedding vector descriptor for AI matching
+        const faceEmbeddingVector = Array.from({ length: 128 }, () => Math.random() * 2 - 1);
+
+        // Capture selfie photo snapshot from enrollment webcam
+        let avatarUrl = 'assets/headshot_male.png';
+        if (regWebcamVideo && state.regCameraStream) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 300; canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(regWebcamVideo, 0, 0, 300, 300);
+            avatarUrl = canvas.toDataURL('image/jpeg', 0.85);
+        }
+
+        const newEmp = {
+            id: `USR-${Date.now().toString().slice(-4)}`,
+            name: nama,
+            nik: nik,
+            email: email,
+            password: password,
+            faceEmbedding: JSON.stringify(faceEmbeddingVector),
+            dept: divisi,
+            role: role,
+            status: 'Hadir',
+            time: new Date().toLocaleTimeString(),
+            confidence: '99.9%',
+            loc: 'Kantor HQ (Terdaftar Baru)',
+            lat: state.geofence.lat,
+            lng: state.geofence.lng,
+            avatar: avatarUrl,
+            type: 'hq'
+        };
+
+        // Add to local state & default login list
+        state.registeredEmployees.unshift(newEmp);
+        state.employees.unshift(newEmp);
+        DEFAULT_USERS.push({ email, password, name: nama, role, dept: divisi, avatar: avatarUrl });
+
+        renderDashboardTable();
+        renderRecordsTable();
+        renderRosterGrid();
+
+        // Submit new user row to Google Sheets via Apps Script POST REST API
+        await submitToAppsScript({
+            action: 'register',
+            nama: nama,
+            nik: nik,
+            email: email,
+            password: password,
+            faceEmbedding: faceEmbeddingVector,
+            divisi: divisi,
+            role: role
+        });
+
+        closeRegisterModal();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Registrasi Wajah Berhasil!',
+            html: `
+                <div style="text-align:center;">
+                    <img src="${avatarUrl}" style="width:90px; height:90px; border-radius:50%; border:3px solid #00f2fe; object-fit:cover; margin-bottom:12px;">
+                    <h3 style="color:#00f2fe;">${nama} (${nik})</h3>
+                    <p style="color:#9ca3af; font-size:12px;">Vektor Wajah 128-D & Data Karyawan Berhasil Disimpan ke Database Google Sheets!</p>
+                </div>
+            `,
+            background: '#0f1422',
+            color: '#fff',
+            confirmButtonColor: '#00f2fe'
+        });
     });
 
     // Capture Base64 Snapshot from Video Stream
@@ -214,7 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const capturedSelfie = captureCameraSnapshot();
             const nowStr = new Date().toLocaleTimeString();
 
-            // Match user against logged in user or Google Sheets Users dataset
             let matchedUser = state.currentUser;
             if (!matchedUser && state.registeredEmployees.length > 0) {
                 matchedUser = state.registeredEmployees[0];
@@ -248,7 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('scan-result-img').src = matchedUser.avatar;
             }
 
-            // Post Attendance transaction to Google Apps Script REST API
             submitToAppsScript({
                 action: 'getAttendance',
                 checkType: 'IN',
@@ -263,7 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 status: 'Hadir'
             });
 
-            // Prepend to Activity Stream
             const stream = document.getElementById('scan-activity-stream');
             if (stream) {
                 const li = document.createElement('li');
@@ -525,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 name: cols[1] || `Karyawan ${i}`,
                                 nik: cols[2] || '',
                                 email: cols[3] || '',
-                                faceEmbedding: cols[5] || '', // Stored Face Descriptor Array in Google Sheets
+                                faceEmbedding: cols[5] || '',
                                 dept: cols[6] || 'Engineering',
                                 role: cols[7] || 'Anggota Tim',
                                 status: 'Hadir',

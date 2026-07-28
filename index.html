@@ -118,13 +118,9 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <div class="search-bar hidden-mobile">
-                        <i data-lucide="search"></i>
-                        <input type="text" placeholder="Cari karyawan, NIK..." id="global-search">
-                    </div>
-                    <button class="btn btn-secondary btn-icon" id="btn-notifications" title="Notifikasi">
-                        <i data-lucide="bell"></i>
-                        <span class="notification-badge">3</span>
+                    <button class="btn btn-outline" id="btn-open-register-modal">
+                        <i data-lucide="user-plus"></i>
+                        <span>+ Daftar Wajah Baru</span>
                     </button>
                     <button class="btn btn-primary" id="btn-quick-scan">
                         <i data-lucide="camera"></i>
@@ -168,6 +164,12 @@
                                 <i data-lucide="log-in"></i> Masuk Ke Sistem Presensi
                             </button>
                         </form>
+
+                        <div class="mt-4 text-center">
+                            <button type="button" class="btn btn-ghost text-cyan" id="btn-login-register">
+                                <i data-lucide="user-plus"></i> Belum Memiliki Akun? Registrasi Wajah Baru
+                            </button>
+                        </div>
 
                         <div class="login-footer text-muted">
                             <small>Tersinkronisasi dengan Google Sheets DB & Google Apps Script REST API</small>
@@ -570,6 +572,12 @@
 
             <!-- Screen 8: Roster Karyawan -->
             <section id="screen-roster" class="screen-view">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Roster & Vektor Wajah Terdaftar</h3>
+                    <button class="btn btn-primary" id="btn-roster-add-user">
+                        <i data-lucide="user-plus"></i> + Registrasi Wajah Baru
+                    </button>
+                </div>
                 <div class="roster-grid" id="roster-grid">
                     <!-- Populated in JS -->
                 </div>
@@ -600,6 +608,81 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Modal Registrasi Wajah Karyawan Baru -->
+    <div class="modal-overlay hidden" id="modal-register-face">
+        <div class="modal-content glassmorphism" style="width:600px; max-width:95vw;">
+            <div class="modal-header">
+                <h3><i data-lucide="user-plus" class="text-cyan"></i> Registrasi Wajah Karyawan Baru</h3>
+                <button class="modal-close" id="btn-close-register-modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-register-face">
+                <div class="modal-body space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label>Nama Lengkap Karyawan</label>
+                            <input type="text" id="reg-nama" class="form-input" placeholder="contoh: Budi Santoso" required>
+                        </div>
+                        <div class="form-group">
+                            <label>NIK Karyawan</label>
+                            <input type="text" id="reg-nik" class="form-input" placeholder="317100293049" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label>Email Perusahaan</label>
+                            <input type="email" id="reg-email" class="form-input" placeholder="budi@company.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password Akun</label>
+                            <input type="password" id="reg-password" class="form-input" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label>Divisi</label>
+                            <select id="reg-divisi" class="form-select">
+                                <option value="Engineering">Engineering</option>
+                                <option value="Design">Design</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="DevOps">DevOps</option>
+                                <option value="Sales">Sales</option>
+                                <option value="HRD">HRD</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Role Hak Akses</label>
+                            <select id="reg-role" class="form-select">
+                                <option value="karyawan">Karyawan</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Camera Enrollment Preview -->
+                    <div class="form-group margin-top">
+                        <label class="text-cyan font-bold">Perekaman Vektor Wajah (Kamera HP / Webcam)</label>
+                        <div class="mini-cam-preview" style="height:200px;">
+                            <video id="reg-webcam-video" autoplay playsinline muted class="video-element"></video>
+                            <div class="scan-hud">
+                                <div class="hud-box top-left">MODE ENROLLMENT</div>
+                                <div class="hud-box top-right" id="reg-hud-status">POSISIKAN WAJAH</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-block btn-sm margin-top" id="btn-reg-start-cam">
+                            <i data-lucide="video"></i> Buka Kamera Enrollment
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-reg-cancel">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btn-reg-submit">
+                        <i data-lucide="save"></i> Simpan Ke Google Sheets
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Verification Detail Modal -->
